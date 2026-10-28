@@ -62,6 +62,6 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
 4. **CV.** The user does not want a target role or "what I am looking for" on the site; show skills and how they work instead (the "approach" section). The CV in `Desktop\Linus CV` contains the phone number and home address, so it cannot be linked as it is.
 5. **Fewer cards per game.** Merge the three MySurvivalGame cards (Sundmark, Test Facility, Kvarnvik Landmarks) into one strong card.
 6. **Missing details.** Years for DevMind, DateMe and VoxelCommander; a link for VoxelCommander.
-7. **Deploy** on Vercel from GitHub and connect `portfolio.amastack.com`.
+7. ~~Deploy on Vercel and connect `portfolio.amastack.com`.~~ Done 2026-10-28: Vercel project `portfolioweb` (also https://portfolioweb-lyart-one.vercel.app), repo `Crutz69/Portfolio` (public); every push to `main` redeploys.
 
 Source material about the game (MySurvivalGame, Sundmark MapGen, test facility) is in `C:\Dev\MySurvivalGame`; see `DEMO_MAP_PLAN.md` there. Do not edit that repo from this project.
