@@ -161,6 +161,20 @@ section > header { display: grid; gap: 10px; }
 .card .no { font-family: var(--mono); font-size: .74rem; color: var(--mark); letter-spacing: .1em; }
 .empty { color: var(--ink-soft); padding: 28px; border: 1px dashed var(--rule); }
 
+/* the larger projects get two wide columns; the smaller tests sit below in a quieter, denser group */
+.cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+.smallgroup { display: grid; gap: 16px; margin-top: 18px; padding-top: 22px; border-top: 1px dashed var(--rule); }
+.smallgroup > header { display: grid; gap: 4px; }
+.smallgroup h3 { font-size: 1.5rem; }
+.smallgroup > header p { color: var(--ink-soft); }
+.cards.small { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.cards.small .card { gap: 9px; padding-bottom: 18px; }
+.cards.small .card > :not(.pic):not(.tools) { margin-inline: 16px; }
+.cards.small .card h3 { font-size: 1.35rem; }
+.cards.small .card p.sum { font-size: .92rem; }
+.cards.small .card .pic { aspect-ratio: 16 / 8; }
+.cards.small .more { padding: 5px 11px; font-size: .84rem; }
+
 /* case studies: one panel per project, numbered steps, the limits set apart */
 .cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; align-items: start; }
 .case { display: grid; gap: 10px; padding: 22px 24px 24px; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); min-width: 0; }

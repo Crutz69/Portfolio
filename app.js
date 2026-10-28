@@ -19,14 +19,14 @@
       featured: "Featured", readCase: "Read the case study", open: "Open", tools: "Tools and topics", expEyebrow: "Experience and education",
       background: "Background", aboutMe: "About me", workWith: "Languages and tools", letsTalk: "Let's talk", copy: "Copy address", copied: "Copied",
       selected: "Selected, press Ctrl+C", live: "Procedural terrain, drawn live in your browser", seeDemos: "Watch the demos", demo: "See the demo",
-      code: "Source code", glance: "At a glance", caseLink: "Case study", caseEyebrow: "How it works", problem: "The problem", approachSteps: "What the code does", limits: "Where it stops",
+      code: "Source code", glance: "At a glance", caseLink: "Case study", caseEyebrow: "How it works", smallTests: "Smaller tests", smallNote: "Shorter experiments to try an idea, an engine or a tool.", problem: "The problem", approachSteps: "What the code does", limits: "Where it stops",
       models: "3D", modelsEyebrow: "3D models", modelHint: "Drag to rotate · scroll to zoom", modelPick: "Choose a model", modelAlt: "3D model", modelStill: "Still picture in this preview · turn it in 3D on portfolio.amastack.com" },
     sv: { language: "Språk", sections: "Avsnitt", work: "Projekt", skills: "Kunskaper", skillsEyebrow: "Kunskaper och arbetssätt", experience: "Erfarenhet", demos: "Demos", about: "Om mig", contact: "Kontakt",
       seeWork: "Se projekten", getInTouch: "Hör av dig", selectedWork: "Utvalda arbeten", projects: "Projekt", empty: "Projekten visas här.",
       featured: "Utvalt", readCase: "Läs fallstudien", open: "Öppna", tools: "Verktyg och ämnen", expEyebrow: "Erfarenhet och utbildning",
       background: "Bakgrund", aboutMe: "Om mig", workWith: "Språk och verktyg", letsTalk: "Hör av dig", copy: "Kopiera adressen", copied: "Kopierad",
       selected: "Markerad, tryck Ctrl+C", live: "Procedurell terräng, ritad live i din webbläsare", seeDemos: "Se demos", demo: "Se demot",
-      code: "Källkod", glance: "I korthet", caseLink: "Fallstudie", caseEyebrow: "Så fungerar det", problem: "Problemet", approachSteps: "Vad koden gör", limits: "Var den slutar",
+      code: "Källkod", glance: "I korthet", caseLink: "Fallstudie", caseEyebrow: "Så fungerar det", smallTests: "Mindre tester", smallNote: "Kortare experiment för att prova en idé, en motor eller ett verktyg.", problem: "Problemet", approachSteps: "Vad koden gör", limits: "Var den slutar",
       models: "3D", modelsEyebrow: "3D-modeller", modelHint: "Dra för att vrida · scrolla för att zooma", modelPick: "Välj en modell", modelAlt: "3D-modell", modelStill: "Stillbild i förhandsvisningen · vrid den i 3D på portfolio.amastack.com" }
   };
   // pages of this site that have a Swedish copy
@@ -197,10 +197,17 @@
     const fi = projects.findIndex(p => p.featured);
     if (fi >= 0) s.append(feature(projects[fi], fi));
     const rest = projects.map((p, i) => [p, i]).filter(([, i]) => i !== fi);
+    // the larger projects first; projects marked tier "small" (short tests) follow in their own, more compact group
+    const main = rest.filter(([p]) => p.tier !== "small"), small = rest.filter(([p]) => p.tier === "small");
     const grid = h("div", { class: "cards" });
-    rest.forEach(([p, i], n) => grid.append(card(p, i, n + (fi >= 0 ? 2 : 1))));
+    main.forEach(([p, i], n) => grid.append(card(p, i, n + (fi >= 0 ? 2 : 1))));
     if (editing) grid.append(h("button", { class: "addcard", type: "button", onclick: () => projectDialog(-1) }, "+ Add a project"));
-    if (rest.length || editing) s.append(grid);
+    if (main.length || editing) s.append(grid);
+    if (small.length) {
+      const sg = h("div", { class: "cards small" });
+      small.forEach(([p, i], n) => sg.append(card(p, i, n + main.length + (fi >= 0 ? 2 : 1))));
+      s.append(h("div", { class: "smallgroup" }, h("header", {}, h("h3", {}, ui("smallTests")), h("p", {}, ui("smallNote"))), sg));
+    }
     if (!projects.length && !editing) s.append(h("p", { class: "empty" }, ui("empty")));
     return s;
   }

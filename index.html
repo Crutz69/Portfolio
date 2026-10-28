@@ -126,13 +126,14 @@
     ],
     "linkLabel": "Öppna DateMe",
     "coverAlt": "DateMes inloggning med språkval, inloggning med Google och e-postlänk"
-   }
+   },
+   "case": "#case-dateme"
   },
   {
    "title": "VoxelCommander",
    "year": "2026",
    "role": "Engine programmer",
-   "summary": "A 2D real-time strategy engine written from scratch in C++ with Raylib and no ready-made game logic: its own A* pathfinding, dynamically rendered fog of war and tuned memory handling.",
+   "summary": "A small test: a 2D real-time strategy prototype written in C++ with Raylib, with its own A* pathfinding and fog of war.",
    "tags": [
     "C++",
     "Raylib",
@@ -148,7 +149,7 @@
    "featured": false,
    "sv": {
     "role": "Motorprogrammerare",
-    "summary": "En motor för realtidsstrategi i 2D, skriven från grunden i C++ med Raylib och utan färdig spellogik: egen A*-vägsökning, dynamiskt renderad krigsdimma och finjusterad minneshantering.",
+    "summary": "Ett litet test: en prototyp för realtidsstrategi i 2D, skriven i C++ med Raylib, med egen A*-vägsökning och krigsdimma.",
     "tags": [
      "C++",
      "Raylib",
@@ -157,8 +158,7 @@
     ],
     "coverAlt": "En skärmytsling: basen syns i grönt, krigsdimma över resten av kartan och byggmenyn längst ned"
    },
-   "case": "#case-voxelcommander",
-   "code": "https://github.com/Crutz69/VoxelCommander"
+   "tier": "small"
   },
   {
    "title": "Chaos Crown",
@@ -195,7 +195,8 @@
     "demoLabel": "Se skärmbilder"
    },
    "demo": "media.html#chaos-crown",
-   "demoLabel": "See screenshots"
+   "demoLabel": "See screenshots",
+   "tier": "small"
   },
   {
    "title": "CastleDefence / Emberfall: Factions",
@@ -232,40 +233,14 @@
    },
    "demo": "media.html#castledefence",
    "demoLabel": "Watch gameplay",
-   "code": "https://github.com/Crutz69/ProjektCastleDefence"
+   "code": "https://github.com/Crutz69/ProjektCastleDefence",
+   "tier": "small"
   }
  ],
  "cases": {
   "title": "Case studies",
-  "intro": "Two problems in detail: what had to work, what the code does about it, and where it stops. Both projects were built with AI coding assistants under my direction.",
+  "intro": "Two problems in detail from my larger projects: what had to work, what the code does about it, and where it stops. Both were built with AI coding assistants under my direction. Sundmark has its own case study.",
   "items": [
-   {
-    "id": "voxelcommander",
-    "project": "VoxelCommander",
-    "code": "https://github.com/Crutz69/VoxelCommander",
-    "title": "Getting units where they are sent",
-    "problem": "Units cross a tile map with water, buildings and rocks, and players often click where no unit can stand, such as the middle of a building. A path that cuts through a corner, or a unit that freezes because its target is blocked, is the first thing a player notices.",
-    "steps": [
-     "A* on the tile grid, in eight directions. A diagonal step is only allowed when both straight neighbours are free, so units never cut the corner of a building.",
-     "A tile is walkable when it is not water and a small collision probe at its centre touches no building or obstacle.",
-     "A blocked target moves to the nearest walkable tile within eight tiles, so a click on a building still gives a path.",
-     "The search stops after 5 000 nodes. The unit then heads straight for the target instead of stalling the game.",
-     "On the move, a unit skips to the next waypoint whenever it can see it, which straightens the grid path. Units push apart when they overlap, and a unit that has not moved for a second stops."
-    ],
-    "limits": "Every unit runs its own search when it gets an order, and walkability is checked with collision probes instead of a cached grid. A flow field or a cached grid would scale better to large armies.",
-    "sv": {
-     "title": "Att få enheterna dit de skickas",
-     "problem": "Enheterna korsar en rutkarta med vatten, byggnader och klippor, och spelaren klickar ofta där ingen enhet kan stå, till exempel mitt i en byggnad. En väg som skär genom ett hörn, eller en enhet som fryser för att målet är blockerat, är det första en spelare märker.",
-     "steps": [
-      "A* på rutnätet, i åtta riktningar. Ett diagonalt steg tillåts bara när båda raka grannarna är fria, så enheterna skär aldrig genom hörnet på en byggnad.",
-      "En ruta går att gå på när den inte är vatten och en liten kollisionskontroll i mitten inte träffar någon byggnad eller något hinder.",
-      "Ett blockerat mål flyttas till närmaste gångbara ruta inom åtta rutor, så ett klick på en byggnad ger ändå en väg.",
-      "Sökningen avbryts efter 5 000 noder. Enheten går då rakt mot målet i stället för att låsa spelet.",
-      "Under förflyttningen hoppar en enhet till nästa vägpunkt så fort den kan se den, vilket rätar ut vägen längs rutnätet. Enheter knuffar isär när de överlappar, och en enhet som inte har rört sig på en sekund stannar."
-     ],
-     "limits": "Varje enhet gör en egen sökning när den får en order, och gångbarheten kontrolleras med kollisionskontroller i stället för ett sparat rutnät. Ett flödesfält eller ett sparat rutnät skulle skala bättre till stora arméer."
-    }
-   },
    {
     "id": "devmind",
     "project": "DevMind",
@@ -292,11 +267,37 @@
      ],
      "limits": "Låsen finns inuti en process, så de skyddar inte mot en andra DevMind som körs i samma mapp. Eftersom git-stegen körs i tur och ordning arbetar agenterna parallellt men committar en i taget."
     }
+   },
+   {
+    "id": "dateme",
+    "project": "DateMe",
+    "title": "One sign-in path for Google and email links",
+    "problem": "DateMe started on NextAuth and moved to Supabase Auth. A visitor can sign in with Google or with a link sent by email, and every API call has to know who is asking without trusting what the browser says about itself. A stale session must never bring back an account that was deleted.",
+    "steps": [
+     "Google and the email link both land on one callback page. It reads the access token from the link, removes it from the address bar at once, and sends it to the server.",
+     "The server checks the token with Supabase and uses the Supabase user ID as the only account ID.",
+     "The token goes into an HttpOnly, SameSite cookie that is Secure in production and lasts an hour. The cookies from the old sign-in flow are cleared.",
+     "Every API call finds the account from that cookie. An account ID sent in a header, query or body is ignored, except in opt-in offline tests.",
+     "Whether a profile is complete is read only from Supabase, so leftover local data cannot revive a deleted account. Tests cover this and forged cookies."
+    ],
+    "limits": "The cookie holds the Supabase access token itself, and there is no refresh flow yet, so a visitor signs in again after an hour.",
+    "sv": {
+     "title": "En inloggningsväg för Google och e-postlänkar",
+     "problem": "DateMe började med NextAuth och gick över till Supabase Auth. En besökare kan logga in med Google eller med en länk som skickas med e-post, och varje API-anrop måste veta vem som frågar utan att lita på vad webbläsaren säger om sig själv. En gammal session får aldrig väcka liv i ett konto som har raderats.",
+     "steps": [
+      "Både Google och e-postlänken landar på samma sida. Den läser åtkomsttoken från länken, tar genast bort den ur adressfältet och skickar den till servern.",
+      "Servern kontrollerar token hos Supabase och använder Supabase-användarens id som enda konto-id.",
+      "Token sparas i en HttpOnly-cookie med SameSite, som är Secure i produktion och gäller en timme. Kakorna från det gamla inloggningsflödet rensas.",
+      "Varje API-anrop hittar kontot via den cookien. Ett konto-id som skickas i en header, en query eller ett body ignoreras, utom i offlinetester som man slår på själv.",
+      "Om en profil är klar läses bara från Supabase, så kvarglömd lokal data kan inte väcka liv i ett raderat konto. Tester täcker det och förfalskade kakor."
+     ],
+     "limits": "Cookien innehåller själva åtkomsttoken från Supabase, och det finns inget flöde för att förnya den än, så en besökare loggar in igen efter en timme."
+    }
    }
   ],
   "sv": {
    "title": "Fallstudier",
-   "intro": "Två problem i detalj: vad som måste fungera, vad koden gör åt det och var den slutar. Båda projekten är byggda med AI-kodassistenter under min ledning."
+   "intro": "Två problem i detalj från mina större projekt: vad som måste fungera, vad koden gör åt det och var den slutar. Båda är byggda med AI-kodassistenter under min ledning. Sundmark har en egen fallstudie."
   }
  },
  "aboutTitle": "About me",
@@ -620,8 +621,8 @@
     "text": "gameplay systems, each with its own test room"
    },
    {
-    "n": "6",
-    "text": "projects across games, engines, web apps and AI tools"
+    "n": "3",
+    "text": "larger projects, each built over weeks to months, plus three smaller tests"
    },
    {
     "n": "5",
@@ -639,8 +640,8 @@
      "text": "gameplaysystem, vart och ett med eget testrum"
     },
     {
-     "n": "6",
-     "text": "projekt inom spel, motorer, webbappar och AI-verktyg"
+     "n": "3",
+     "text": "större projekt, vart och ett byggt under veckor till månader, plus tre mindre tester"
     },
     {
      "n": "5",

@@ -52,6 +52,13 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
   - `cover.src` must match `img/[a-z0-9_-.]+.(jpg|png|webp)`.
   - Links must be `https://`.
 
+## Project weight (the user, 2026-10-28)
+
+- The three big projects, each weeks to months of work: **MySurvivalGame** (Sundmark, featured), **DevMind** and **DateMe**.
+- VoxelCommander, Chaos Crown and CastleDefence are small tests. They carry `"tier": "small"` and render in the "Smaller tests" group. Do not give them case studies or big claims.
+- Case studies (`cases` in the JSON) cover DevMind (file locks and git) and DateMe (sign-in and sessions). Every step in them was read from the code.
+- DevMind's public code goes to a new repo, `Crutz69/DevMind-Source`, pushed from the history-free `public` branch. The private `DevMind` repo keeps the old history with a leaked key; never make it public.
+
 ## Open work (assessment 2026-10-28, highest value first)
 
 1. **Code to inspect.** Add "Code" links to public repos: VoxelCommander and DevMind, and possibly a cleaned MapGen repo without purchased assets. Ask the user which repos may be public.
