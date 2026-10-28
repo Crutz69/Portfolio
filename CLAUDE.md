@@ -20,6 +20,7 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
 - 3D models: the `models` block in the JSON drives a `<model-viewer>` section (pinned to @google/model-viewer 3.5.0 on jsdelivr, loaded only near the section).
   - Files live in `models/*.glb`, with 480×360 WebP thumbnails at `img/model-*.webp`. They are Tripo AI models from Chaos Crown (`Documents\Unreal Projects\RTSTemplate`) and the APC from MySurvivalGame.
   - They were converted in Blender: decimated to at most 55 000 triangles, textures at 1024 px, centred, longest side 2 m. Keep each GLB under about 4 MB.
+  - The APC is different: its weathered paint is a node setup glTF cannot carry. It was baked from `APC_rigged.blend` (exterior only, 120 000 triangles, 2048 px colour and normal maps, Draco-compressed, 2.6 MB). model-viewer fetches the Draco decoder from gstatic.com.
   - "Tripo" in the user's messages means Tripo AI. Describe each model by what was actually done to it.
 - Static build for normal hosting: `python build_static.py` writes `dist/` (complete HTML documents, img/, media/*.mp4).
   - Target: Vercel, imported from a GitHub repo of this folder. `vercel.json` runs `python3 build_static.py` and serves `dist/`; `.gitignore` keeps `dist/` and `source/` out. Custom domain `portfolio.amastack.com`. The DNS for amastack.com is on Cloudflare (CNAME, DNS only).
