@@ -42,6 +42,7 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
 - The email `linusvirebrand@gmail.com` is on the site at the user's request. Suggest a separate address against spam.
 - Credit honestly. The user designs and directs; code is written with AI assistants. Never overclaim.
   - Every sentence must be something the user can defend in an interview.
+  - The AI models used across the projects: Gemini, GPT, Grok and Claude (plus Codex).
   - DevMind, DateMe and VoxelCommander come from the user's own profile document; Claude has not verified them.
 - Label footage honestly: "Recorded gameplay" versus "Sequence of stills" (Swedish: "Inspelat gameplay" versus "Sekvens av stillbilder").
 - Swedish text says exactly what the English says, no more.
@@ -57,7 +58,8 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
 - The three big projects, each weeks to months of work: **MySurvivalGame** (Sundmark, featured), **DevMind** and **DateMe**.
 - VoxelCommander, Chaos Crown and CastleDefence are small tests. They carry `"tier": "small"` and render in the "Smaller tests" group. Do not give them case studies or big claims.
 - Case studies (`cases` in the JSON) cover DevMind (file locks and git) and DateMe (sign-in and sessions). Every step in them was read from the code.
-- DevMind's public code goes to a new repo, `Crutz69/DevMind-Source`, pushed from the history-free `public` branch. The private `DevMind` repo keeps the old history with a leaked key; never make it public.
+- DevMind's code is not published (the user's choice, 2026-10-28), so its card has no code link. A history-free `public` branch exists locally in `Desktop\DevMind` if that changes. The private `DevMind` repo keeps the old history with a leaked key; never make it public.
+- The projects grew through many rounds of tests and changes with several AI models: Gemini, GPT, Grok and Claude. Credit them that way; do not ask the user for polished explanations.
 
 ## Open work (assessment 2026-10-28, highest value first)
 
