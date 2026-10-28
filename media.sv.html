@@ -17,24 +17,27 @@
 body { margin: 0; }
 .intro { padding-block: 48px 8px; display: grid; gap: 14px; }
 .intro h1 { font-size: clamp(3rem, 10vw, 6.5rem); font-weight: 700; text-transform: uppercase; line-height: .9; }
-.jump { display: flex; flex-wrap: wrap; gap: 6px 18px; }
-.jump a { font-family: var(--mono); font-size: .78rem; letter-spacing: .08em; color: var(--ink-soft); text-decoration: none; }
-.jump a:hover { color: var(--accent); }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet);
+  font-family: var(--mono); font-size: .76rem; letter-spacing: .06em; color: var(--ink-soft); text-decoration: none; transition: border-color .2s, color .2s; }
+.jump a .ic { width: 15px; height: 15px; }
+.jump a:hover { color: var(--accent); border-color: var(--accent); }
 .demo { display: grid; gap: 18px; }
 .demo header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
-.kind { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; padding: 3px 9px; border: 1px solid currentColor; }
+.kind { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; padding: 3px 9px; border: 1px solid currentColor; }
 .kind.live { color: var(--accent); }
 .kind.stills { color: var(--mark); }
-.player { background: var(--ink); aspect-ratio: 16 / 9; }
+.kind .ic { width: 14px; height: 14px; }
+.player { background: #080c0c; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
 .player.wide { aspect-ratio: 1600 / 672; }
-.player video { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--ink); }
+.player video { display: block; width: 100%; height: 100%; object-fit: contain; background: #080c0c; }
 .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; }
-.shots img { aspect-ratio: 16 / 9; object-fit: cover; cursor: zoom-in; }
+.shots img { aspect-ratio: 16 / 9; object-fit: cover; cursor: zoom-in; border-radius: var(--r-sm); }
 .lb { position: fixed; inset: 0; background: rgba(8, 12, 12, .92); display: grid; place-items: center; z-index: 20;
   padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .lb img { max-width: 100%; max-height: calc(100vh - 110px); width: auto; height: auto; aspect-ratio: auto; cursor: default; }
 .lb p { color: #dfe7e4; font-size: .9rem; margin-top: 10px; text-align: center; }
-.lb button { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); background: #1c2725; color: #eef3f1; border: 1px solid #3a4a47; font: 500 .9rem var(--body); padding: 8px 14px; cursor: pointer; }
+.lb button { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); background: #1c2725; color: #eef3f1; border: 1px solid #3a4a47; font: 500 .9rem var(--body); padding: 8px 14px; border-radius: var(--r-sm); cursor: pointer; }
 .lb figure { display: grid; justify-items: center; }
 </style>
 </head>
@@ -42,24 +45,25 @@ body { margin: 0; }
 <div class="wrap">
   <header class="top">
     <a class="mark" href="./?lang=sv">Linus Virebrand</a>
-    <nav aria-label="Webbplats"><a href="./?lang=sv#work">Projekt</a><a href="media.sv.html">Demos</a><a href="./?lang=sv#about">Om mig</a><a href="./?lang=sv#contact">Kontakt</a><span class="lang" role="group" aria-label="Språk"><a href="media.html" hreflang="en" lang="en" aria-label="English" onclick="try{localStorage.setItem('portfolio-lang','en')}catch(e){}">EN</a><a href="media.sv.html" hreflang="sv" lang="sv" aria-label="Svenska" aria-current="true">SV</a></span></nav>
+    <nav aria-label="Webbplats"><a href="./?lang=sv#work"><i data-icon="grid"></i><span>Projekt</span></a><a href="media.sv.html" aria-current="page"><i data-icon="film"></i><span>Demos</span></a><a href="./?lang=sv#about"><i data-icon="user"></i><span>Om mig</span></a><a href="./?lang=sv#contact"><i data-icon="mail"></i><span>Kontakt</span></a></nav>
+    <span class="lang" role="group" aria-label="Språk"><a href="media.html" hreflang="en" lang="en" aria-label="English" onclick="try{localStorage.setItem('portfolio-lang','en')}catch(e){}"><i data-icon="flag-gb"></i><span>EN</span></a><a href="media.sv.html" hreflang="sv" lang="sv" aria-label="Svenska" aria-current="true"><i data-icon="flag-se"></i><span>SV</span></a></span>
   </header>
 
   <div class="intro">
-    <p class="eyebrow">Demos</p>
+    <p class="eyebrow"><i data-icon="film"></i>Demos</p>
     <h1>Projekt i rörelse</h1>
     <p class="col">Speltagningar och skärmbilder från fem projekt. Varje avsnitt anger vad materialet är: en inspelning av spel eller en sekvens av stillbilder från motorn.</p>
-    <nav class="jump" aria-label="Projekt på den här sidan"><a href="#trailer">Trailer</a><a href="#castledefence">CastleDefence</a><a href="#chaos-crown">Chaos Crown</a><a href="#sundmark">Sundmark</a><a href="#facility">Testanläggningen</a><a href="#landmarks">Kvarnviks landmärken</a></nav>
+    <nav class="jump" aria-label="Projekt på den här sidan"><a href="#trailer"><i data-icon="film"></i>Trailer</a><a href="#castledefence"><i data-icon="gamepad"></i>CastleDefence</a><a href="#chaos-crown"><i data-icon="image"></i>Chaos Crown</a><a href="#sundmark"><i data-icon="map"></i>Sundmark</a><a href="#facility"><i data-icon="building"></i>Testanläggningen</a><a href="#landmarks"><i data-icon="pin"></i>Kvarnviks landmärken</a></nav>
   </div>
 
   <section class="demo" id="trailer" aria-labelledby="tr-h">
-    <header><h2 id="tr-h">Sundmark-trailer</h2><span class="kind stills">Sekvens av stillbilder</span></header>
+    <header><h2 id="tr-h">Sundmark-trailer</h2><span class="kind stills"><i data-icon="image"></i>Sekvens av stillbilder</span></header>
     <p class="col">Femtio sekunder genom den genererade regionen, dess landmärken och testanläggningen, klippta ur stillbilder tagna i Unreal Engine 5.8. <a href="sundmark.sv.html">Läs fallstudien →</a></p>
     <div class="player wide"><video controls playsinline preload="metadata" poster="img/trailer-poster.jpg"><source src="media/trailer-sv.mp4" type="video/mp4"></video></div>
   </section>
 
   <section class="demo" id="castledefence" aria-labelledby="cd-h">
-    <header><h2 id="cd-h">CastleDefence / Emberfall: Factions</h2><span class="kind live">Inspelat gameplay</span></header>
+    <header><h2 id="cd-h">CastleDefence / Emberfall: Factions</h2><span class="kind live"><i data-icon="video"></i>Inspelat gameplay</span></header>
     <p class="col">En inspelning i webbläsaren av rekrytering, strid och kamerastyrning. <a href="https://crutz69.github.io/ProjektCastleDefence/" target="_blank" rel="noopener">Spela i webbläsaren →</a></p>
     <div class="player"><video controls playsinline preload="metadata" poster="img/castledefence-gameplay.jpg"><source src="media/castledefence-gameplay.mp4" type="video/mp4"></video></div>
     <div class="shots">
@@ -70,7 +74,7 @@ body { margin: 0; }
   </section>
 
   <section class="demo" id="chaos-crown" aria-labelledby="cc-h">
-    <header><h2 id="cc-h">Chaos Crown</h2><span class="kind stills">Skärmbilder från prototypen</span></header>
+    <header><h2 id="cc-h">Chaos Crown</h2><span class="kind stills"><i data-icon="image"></i>Skärmbilder från prototypen</span></header>
     <p class="col">Strid i prototypens stresstestarena, med enkla platshållare för figurer och miljö.</p>
     <div class="shots">
       <figure><img src="img/chaos-crown-gameplay.jpg" alt="Fysikdrivna RTS-enheter i strid" loading="lazy"><figcaption>Fysikdrivna enheter i strid.</figcaption></figure>
@@ -79,7 +83,7 @@ body { margin: 0; }
   </section>
 
   <section class="demo" id="sundmark" aria-labelledby="sm-h">
-    <header><h2 id="sm-h">Sundmark World Builder</h2><span class="kind stills">Sekvens av stillbilder</span></header>
+    <header><h2 id="sm-h">Sundmark World Builder</h2><span class="kind stills"><i data-icon="image"></i>Sekvens av stillbilder</span></header>
     <p class="col">Skärmbilder från editorn satta i följd; inte inspelat gameplay. <a href="sundmark.sv.html">Läs fallstudien →</a></p>
     <div class="player"><video controls playsinline preload="metadata" poster="img/map_v3_kv_low.jpg"><source src="media/sundmark-walkthrough.mp4" type="video/mp4"></video></div>
     <div class="shots">
@@ -90,7 +94,7 @@ body { margin: 0; }
   </section>
 
   <section class="demo" id="facility" aria-labelledby="tf-h">
-    <header><h2 id="tf-h">Testanläggningen för gameplay</h2><span class="kind stills">Sekvens av stillbilder</span></header>
+    <header><h2 id="tf-h">Testanläggningen för gameplay</h2><span class="kind stills"><i data-icon="image"></i>Sekvens av stillbilder</span></header>
     <p class="col">Skärmbilder från spelet av hallen och rummen satta i följd; inte inspelat gameplay. <a href="sundmark.sv.html#facility">Alla elva rum →</a></p>
     <div class="player"><video controls playsinline preload="metadata" poster="img/fac_hub.jpg"><source src="media/facility-walkthrough.mp4" type="video/mp4"></video></div>
     <div class="shots">
@@ -101,7 +105,7 @@ body { margin: 0; }
   </section>
 
   <section class="demo" id="landmarks" aria-labelledby="lm-h">
-    <header><h2 id="lm-h">Kvarnviks landmärken</h2><span class="kind stills">Sekvens av stillbilder</span></header>
+    <header><h2 id="lm-h">Kvarnviks landmärken</h2><span class="kind stills"><i data-icon="image"></i>Sekvens av stillbilder</span></header>
     <p class="col">Skärmbilder från editorn av klostret och kyrkogårdsparken satta i följd; inte inspelat gameplay.</p>
     <div class="player"><video controls playsinline preload="metadata" poster="img/map_m_aerial.jpg"><source src="media/landmarks-walkthrough.mp4" type="video/mp4"></video></div>
     <div class="shots">
@@ -113,6 +117,7 @@ body { margin: 0; }
 
   <footer><p>Grafiken i Unreal-skärmbilderna kommer från licensierade paket av sina upphovspersoner på Fab och Unreal Marketplace och från Epic Games exempelprojekt.</p></footer>
 </div>
+<script src="ui.js"></script>
 <script src="fx.js"></script>
 <script>
 document.addEventListener("click", (e) => {

@@ -37,7 +37,7 @@ page = ("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n
         "<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}"
         "img{max-width:100%}[hidden]{display:none!important}</style>\n</head>\n<body>\n" + body + "</body>\n</html>\n")
 open(os.path.join(DIST, "index.html"), "w", encoding="utf-8").write(page)
-for name in ("site.css", "app.js", "fx.js", "favicon.svg", "404.html", "sundmark.html", "media.html", "sundmark.sv.html", "media.sv.html"):
+for name in ("site.css", "app.js", "ui.js", "fx.js", "favicon.svg", "404.html", "sundmark.html", "media.html", "sundmark.sv.html", "media.sv.html"):
     shutil.copy(os.path.join(HERE, name), DIST)
 shutil.copytree(os.path.join(HERE, "img"), os.path.join(DIST, "img"))
 # the 3D models shown by the viewer on the home page (web GLB, one file per model)

@@ -89,6 +89,9 @@
     return h("a", { href: ok, class: cls, target: external(ok) ? "_blank" : null, rel: external(ok) ? "noopener" : null }, label);
   }
   function lines(text) { return String(text || "").split(/\n{2,}/).map(s => s.trim()).filter(Boolean); }
+  // an icon from ui.js, or nothing when that file is not loaded
+  function ic(name) { return window.PortfolioUI && name ? window.PortfolioUI.icon(name) : null; }
+  function eyebrow(icon, text) { return h("p", { class: "eyebrow" }, ic(icon), text); }
 
   // ---------- render ----------
   function render() {
@@ -96,26 +99,55 @@
     document.documentElement.lang = lang;
     app.replaceChildren();
     const wrap = h("div", { class: "wrap" });
+    const nl = (href, icon, label) => h("a", { href, class: "nl" }, ic(icon), h("span", {}, label));
     wrap.append(
       h("header", { class: "top" },
         h("a", { class: "mark", href: "#top" }, data.name || "Portfolio"),
-        h("nav", { "aria-label": ui("sections") }, h("a", { href: "#work" }, ui("work")), data.models ? h("a", { href: "#models" }, ui("models")) : null,
-          data.approach ? h("a", { href: "#skills" }, ui("skills")) : null,
-          (data.experience || []).length ? h("a", { href: "#experience" }, ui("experience")) : null,
-          h("a", { href: localize("media.html") }, ui("demos")), h("a", { href: "#about" }, ui("about")), h("a", { href: "#contact" }, ui("contact")), langSwitch())),
+        h("nav", { "aria-label": ui("sections") }, nl("#work", "grid", ui("work")), data.models ? nl("#models", "cube", ui("models")) : null,
+          data.approach ? nl("#skills", "cpu", ui("skills")) : null,
+          (data.experience || []).length ? nl("#experience", "briefcase", ui("experience")) : null,
+          nl(localize("media.html"), "film", ui("demos")), nl("#about", "user", ui("about")), nl("#contact", "mail", ui("contact"))),
+        langSwitch()),
       ...[plate(), glance(), work(), models(), approach(), experience(), about(), contact()].filter(Boolean),
       h("footer", {}, h("p", {}, tx(data, "footer") || ""), h("p", {}, "© " + new Date().getFullYear() + " " + (data.name || "")))
     );
     app.append(wrap);
     drawTopo();
     startFx();
+    spy();
     if (editing) app.append(editbar());
     else if (canEdit) app.append(editToggle());
   }
   function langSwitch() {
     return h("span", { class: "lang", role: "group", "aria-label": ui("language") }, LANGS.map(l =>
       h("a", { href: "?lang=" + l, hreflang: l, lang: l, "aria-label": l === "sv" ? "Svenska" : "English", "aria-current": l === lang ? "true" : null,
-        onclick: (e) => { e.preventDefault(); if (l !== lang) setLang(l); } }, l.toUpperCase())));
+        onclick: (e) => { e.preventDefault(); if (l !== lang) setLang(l); } }, ic(l === "sv" ? "flag-se" : "flag-gb"), h("span", {}, l.toUpperCase()))));
+  }
+  // the menu marks the section on screen
+  let spyIo = null, spyEnd = false, spyMark = null, spyPin = null;
+  function spy() {
+    if (spyIo) spyIo.disconnect();
+    if (!("IntersectionObserver" in window)) return;
+    const links = new Map([...app.querySelectorAll(".top nav a[href^='#']")].map(a => [a.getAttribute("href").slice(1), a]));
+    const on = new Set();
+    const mark = () => {
+      // a clicked link stays lit until the reader scrolls by hand; at the very bottom the last section is the one being read,
+      // even if it is too short to reach the middle band
+      const ids = [...links.keys()];
+      const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 4;
+      const cur = spyPin || (atEnd ? ids[ids.length - 1] : ids.find(id => on.has(id)));
+      links.forEach((a, id) => { if (id === cur) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); });
+    };
+    spyIo = new IntersectionObserver((es) => { es.forEach(e => e.isIntersecting ? on.add(e.target.id) : on.delete(e.target.id)); mark(); }, { rootMargin: "-30% 0px -60% 0px" });
+    links.forEach((a, id) => { const s = document.getElementById(id); if (s) spyIo.observe(s); });
+    links.forEach((a, id) => a.addEventListener("click", () => { spyPin = id; mark(); }));
+    if (!spyEnd) {
+      spyEnd = true;
+      addEventListener("scroll", () => { if (spyMark) spyMark(); }, { passive: true });
+      const unpin = () => { if (spyPin) { spyPin = null; if (spyMark) spyMark(); } };
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(ev => addEventListener(ev, unpin, { passive: true }));
+    }
+    spyMark = mark;
   }
 
   function plate() {
@@ -123,10 +155,12 @@
     p.append(h("p", { class: "eyebrow" }, tx(data, "headline") || ""));
     p.append(h("h1", {}, data.name || ""));
     if (tx(data, "intro")) p.append(h("p", { class: "lede" }, tx(data, "intro")));
-    const acts = h("div", { class: "actions" }, h("a", { class: "btn solid", href: "#work" }, ui("seeWork")),
-      h("a", { class: "btn", href: localize("media.html") }, ui("seeDemos"), h("span", { "aria-hidden": "true" }, "▶")), h("a", { class: "btn", href: "#contact" }, ui("getInTouch")));
+    const acts = h("div", { class: "actions" }, h("a", { class: "btn solid", href: "#work" }, ic("grid"), ui("seeWork")),
+      h("a", { class: "btn", href: localize("media.html") }, ic("play") || h("span", { "aria-hidden": "true" }, "▶"), ui("seeDemos")), h("a", { class: "btn", href: "#contact" }, ic("mail"), ui("getInTouch")));
     p.append(acts);
-    if ((tx(data, "facts") || []).length) p.append(h("div", { class: "facts mono" }, tx(data, "facts").map(f => h("span", {}, f))));
+    // factIcons: one icon name per fact, in the same order
+    const fi = data.factIcons || [];
+    if ((tx(data, "facts") || []).length) p.append(h("div", { class: "facts mono" }, tx(data, "facts").map((f, i) => h("span", {}, ic(fi[i]), f))));
     if (window.PortfolioFX) p.append(h("p", { class: "hud mono", "aria-hidden": "true" }, h("span", {}, ui("live")), h("span", { class: "fps" })));
     if (editing) p.append(h("div", { class: "actions" }, h("button", { class: "tbtn", type: "button", onclick: () => profileDialog() }, "Edit name, intro and contact")));
     return p;
@@ -158,7 +192,7 @@
   }
 
   function work() {
-    const s = h("section", { id: "work", "aria-labelledby": "workh" }, h("header", {}, h("p", { class: "eyebrow" }, ui("selectedWork")), h("h2", { id: "workh" }, ui("projects"))));
+    const s = h("section", { id: "work", "aria-labelledby": "workh" }, h("header", {}, eyebrow("grid", ui("selectedWork")), h("h2", { id: "workh" }, ui("projects"))));
     const projects = data.projects || [];
     const fi = projects.findIndex(p => p.featured);
     if (fi >= 0) s.append(feature(projects[fi], fi));
@@ -184,16 +218,19 @@
   }
   // the project's own link and, when it has footage on the demo page, a second one to that
   function moreLinks(p, fallback) {
-    const a = link(p.link, (tx(p, "linkLabel") || fallback) + " →", "more");
-    const b = link(p.demo, (tx(p, "demoLabel") || ui("demo")) + " ▶", "more demo");
-    const c = /^https:\/\//i.test(p.code || "") ? link(p.code, "</> " + ui("code"), "more code") : null;
+    const a = link(p.link, tx(p, "linkLabel") || fallback, "more");
+    if (a) a.append(ic(external(a.getAttribute("href")) ? "external" : "arrow-right") || " →");
+    const b = link(p.demo, tx(p, "demoLabel") || ui("demo"), "more demo");
+    if (b) b.prepend(ic("play") || "▶ ");
+    const c = /^https:\/\//i.test(p.code || "") ? link(p.code, ui("code"), "more code") : null;
+    if (c) c.prepend(ic("code") || "</> ");
     return a || b || c ? h("p", { class: "morerow" }, a, b, c) : null;
   }
   function tagList(p) { const tags = tx(p, "tags") || []; return tags.length ? h("ul", { class: "tags", "aria-label": ui("tools") }, tags.map(t => h("li", {}, t))) : null; }
 
   function feature(p, i) {
     const box = h("article", { class: "feature" }, picture(p, "pic"));
-    const txt = h("div", { class: "txt" }, h("p", { class: "eyebrow" }, ui("featured")), h("h3", {}, p.title || "Untitled"), metaLine(p), tx(p, "summary") ? h("p", {}, tx(p, "summary")) : null, tagList(p));
+    const txt = h("div", { class: "txt" }, eyebrow("star", ui("featured")), h("h3", {}, p.title || "Untitled"), metaLine(p), tx(p, "summary") ? h("p", {}, tx(p, "summary")) : null, tagList(p));
     const more = moreLinks(p, ui("readCase"));
     if (more) txt.append(more);
     box.append(txt);
@@ -234,7 +271,7 @@
     const m = data.models, items = ((m && m.items) || []).filter(x => modelFile(x.file));
     if (!items.length) return null;
     if (modelIndex >= items.length) modelIndex = 0;
-    const s = h("section", { id: "models", "aria-labelledby": "modelsh" }, h("header", {}, h("p", { class: "eyebrow" }, ui("modelsEyebrow")), h("h2", { id: "modelsh" }, tx(m, "title") || ""),
+    const s = h("section", { id: "models", "aria-labelledby": "modelsh" }, h("header", {}, eyebrow("cube", ui("modelsEyebrow")), h("h2", { id: "modelsh" }, tx(m, "title") || ""),
       tx(m, "intro") ? h("p", { class: "col" }, tx(m, "intro")) : null));
     // claude.ai artifacts do not serve .glb files, so the private preview there shows each model's still picture instead
     const still3d = !!(window.claude && window.claude.use);
@@ -272,10 +309,12 @@
   function approach() {
     const a = data.approach;
     if (!a) return null;
-    const s = h("section", { id: "skills", "aria-labelledby": "skillsh" }, h("header", {}, h("p", { class: "eyebrow" }, ui("skillsEyebrow")), h("h2", { id: "skillsh" }, tx(a, "title") || ""),
+    const s = h("section", { id: "skills", "aria-labelledby": "skillsh" }, h("header", {}, eyebrow("cpu", ui("skillsEyebrow")), h("h2", { id: "skillsh" }, tx(a, "title") || ""),
       tx(a, "intro") ? h("p", { class: "quote" }, tx(a, "intro")) : null));
+    // each area's icon is set on the English list; the Swedish list uses the same one by position
     const areas = tx(a, "areas") || [];
-    if (areas.length) s.append(h("div", { class: "areas" }, areas.map(x => h("div", {}, h("h3", {}, x.title || ""), h("p", {}, x.text || "")))));
+    const areaIcon = (x, i) => { const s = ic(x.icon || ((a.areas || [])[i] || {}).icon); return s ? h("span", { class: "badge" }, s) : null; };
+    if (areas.length) s.append(h("div", { class: "areas" }, areas.map((x, i) => h("div", {}, h("h3", {}, areaIcon(x, i), x.title || ""), h("p", {}, x.text || "")))));
     const rules = tx(a, "principles") || [];
     if (rules.length) s.append(h("div", { class: "how" }, h("h3", {}, tx(a, "principlesTitle") || ""),
       h("ol", { class: "principles" }, rules.map(x => h("li", {}, h("span", {}, h("b", {}, x.lead || ""), " ", x.text || ""))))));
@@ -286,7 +325,7 @@
   function experience() {
     const items = data.experience || [];
     if (!items.length) return null;
-    const s = h("section", { id: "experience", "aria-labelledby": "exph" }, h("header", {}, h("p", { class: "eyebrow" }, ui("expEyebrow")), h("h2", { id: "exph" }, ui("background"))));
+    const s = h("section", { id: "experience", "aria-labelledby": "exph" }, h("header", {}, eyebrow("briefcase", ui("expEyebrow")), h("h2", { id: "exph" }, ui("background"))));
     s.append(h("ol", { class: "cv" }, items.map(x => h("li", {},
       h("span", { class: "when mono" }, tx(x, "when") || ""),
       h("div", {}, h("h3", {}, tx(x, "title") || ""), tx(x, "org") ? h("p", { class: "org" }, tx(x, "org")) : null, tx(x, "detail") ? h("p", { class: "detail" }, tx(x, "detail")) : null)))));
@@ -294,7 +333,7 @@
   }
 
   function about() {
-    const s = h("section", { id: "about", "aria-labelledby": "abouth" }, h("header", {}, h("p", { class: "eyebrow" }, ui("about")), h("h2", { id: "abouth" }, tx(data, "aboutTitle") || ui("aboutMe"))));
+    const s = h("section", { id: "about", "aria-labelledby": "abouth" }, h("header", {}, eyebrow("user", ui("about")), h("h2", { id: "abouth" }, tx(data, "aboutTitle") || ui("aboutMe"))));
     const left = h("div", { class: "prose" }, lines(tx(data, "about")).map(t => h("p", {}, t)));
     const right = h("div", {}, h("h3", {}, ui("workWith")), h("ul", { class: "skills" }, (tx(data, "skills") || []).map(x => h("li", {}, x))));
     s.append(h("div", { class: "twocol" }, left, right));
@@ -302,20 +341,24 @@
   }
 
   function contact() {
-    const s = h("section", { id: "contact", "aria-labelledby": "contacth" }, h("header", {}, h("p", { class: "eyebrow" }, ui("contact")), h("h2", { id: "contacth" }, tx(data, "contactTitle") || ui("letsTalk"))));
+    const s = h("section", { id: "contact", "aria-labelledby": "contacth" }, h("header", {}, eyebrow("mail", ui("contact")), h("h2", { id: "contacth" }, tx(data, "contactTitle") || ui("letsTalk"))));
     const box = h("div", { class: "contact" });
     if (tx(data, "contactNote")) box.append(h("p", { class: "col" }, tx(data, "contactNote")));
     if (data.email) {
       const em = h("span", { class: "email" }, data.email);
-      const copy = h("button", { class: "btn", type: "button", onclick: async (e) => {
-        const b = e.currentTarget;
-        try { await navigator.clipboard.writeText(data.email); b.textContent = ui("copied"); }
-        catch (err) { const r = document.createRange(); r.selectNodeContents(em); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent = ui("selected"); }
-        setTimeout(() => { b.textContent = ui("copy"); }, 2500);
-      } }, ui("copy"));
+      const word = h("span", {}, ui("copy"));
+      let glyph = ic("copy");
+      const mark = (name) => { const s = ic(name); if (s && glyph) { glyph.replaceWith(s); glyph = s; } };
+      const copy = h("button", { class: "btn", type: "button", onclick: async () => {
+        try { await navigator.clipboard.writeText(data.email); word.textContent = ui("copied"); mark("check"); }
+        catch (err) { const r = document.createRange(); r.selectNodeContents(em); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); word.textContent = ui("selected"); }
+        setTimeout(() => { word.textContent = ui("copy"); mark("copy"); }, 2500);
+      } }, glyph, word);
       box.append(h("div", { class: "addr" }, em, copy));
     }
-    const ls = (data.links || []).map(l => link(l.url, l.label || l.url)).filter(Boolean);
+    // profile links as buttons, with the site's mark when it is one the icon set knows
+    const brand = (u) => /github\.com/i.test(u) ? "github" : /linkedin\.com/i.test(u) ? "linkedin" : "globe";
+    const ls = (data.links || []).map(l => { const a = link(l.url, l.label || l.url, "btn"); if (a) a.prepend(ic(brand(l.url)) || ""); return a; }).filter(Boolean);
     if (ls.length) box.append(h("ul", { class: "links" }, ls.map(a => h("li", {}, a))));
     s.append(box);
     return s;
@@ -499,7 +542,7 @@
       "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap\">\n" +
       "<link rel=\"stylesheet\" href=\"site.css\">\n" +
       "<script type=\"application/json\" id=\"site-data\">" + json + "</script>\n" +
-      "<div id=\"app\"></div>\n<script src=\"fx.js\"></script>\n<script src=\"app.js\"></script>\n</body></html>";
+      "<div id=\"app\"></div>\n<script src=\"ui.js\"></script>\n<script src=\"fx.js\"></script>\n<script src=\"app.js\"></script>\n</body></html>";
   }
   async function publish() {
     if (!artifactNs) { toast("Saving is not available in this view."); return; }

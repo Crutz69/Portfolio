@@ -12,6 +12,11 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
   - `sundmark.sv.html` and `media.sv.html` are Swedish copies of the English pages. When you change an English page, change its Swedish copy too.
   - On the Swedish home page, links to `sundmark.html` and `media.html` go to the `.sv.html` copies (`SV_PAGES` in `app.js`).
 - Motion: `fx.js` is shared by all pages. It draws the live 3D terrain in the title area, adds depth to the title, tilts the project pictures and makes content rise into view. With `prefers-reduced-motion` the terrain is drawn once and nothing moves. If `fx.js` is missing, the pages fall back to the still 2D contours.
+- Icons: `ui.js` is shared by all pages and loads before `fx.js`. It holds the line icons, the GB and SE flags for the language switch, and the back-to-top button.
+  - Static pages write `<i data-icon="name"></i>`; `app.js` calls `PortfolioUI.icon(name)`.
+  - The JSON picks icons with `factIcons` (one per fact) and `icon` on each `approach.areas` item; the Swedish areas use the English icons by position.
+  - The top bar is sticky, and the menu lights the section on screen.
+  - `sundmark*.html` do not load `site.css`; their inline styles copy the bar, switch and icon rules. Change both when you change one.
 - 3D models: the `models` block in the JSON drives a `<model-viewer>` section (pinned to @google/model-viewer 3.5.0 on jsdelivr, loaded only near the section).
   - Files live in `models/*.glb`, with 480×360 WebP thumbnails at `img/model-*.webp`. They are Tripo AI models from Chaos Crown (`Documents\Unreal Projects\RTSTemplate`) and the APC from MySurvivalGame.
   - They were converted in Blender: decimated to at most 55 000 triangles, textures at 1024 px, centred, longest side 2 m. Keep each GLB under about 4 MB.
