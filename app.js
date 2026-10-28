@@ -19,14 +19,14 @@
       featured: "Featured", readCase: "Read the case study", open: "Open", tools: "Tools and topics", expEyebrow: "Experience and education",
       background: "Background", aboutMe: "About me", workWith: "Languages and tools", letsTalk: "Let's talk", copy: "Copy address", copied: "Copied",
       selected: "Selected, press Ctrl+C", live: "Procedural terrain, drawn live in your browser", seeDemos: "Watch the demos", demo: "See the demo",
-      code: "Source code", glance: "At a glance",
+      code: "Source code", glance: "At a glance", caseLink: "Case study", caseEyebrow: "How it works", problem: "The problem", approachSteps: "What the code does", limits: "Where it stops",
       models: "3D", modelsEyebrow: "3D models", modelHint: "Drag to rotate · scroll to zoom", modelPick: "Choose a model", modelAlt: "3D model", modelStill: "Still picture in this preview · turn it in 3D on portfolio.amastack.com" },
     sv: { language: "Språk", sections: "Avsnitt", work: "Projekt", skills: "Kunskaper", skillsEyebrow: "Kunskaper och arbetssätt", experience: "Erfarenhet", demos: "Demos", about: "Om mig", contact: "Kontakt",
       seeWork: "Se projekten", getInTouch: "Hör av dig", selectedWork: "Utvalda arbeten", projects: "Projekt", empty: "Projekten visas här.",
       featured: "Utvalt", readCase: "Läs fallstudien", open: "Öppna", tools: "Verktyg och ämnen", expEyebrow: "Erfarenhet och utbildning",
       background: "Bakgrund", aboutMe: "Om mig", workWith: "Språk och verktyg", letsTalk: "Hör av dig", copy: "Kopiera adressen", copied: "Kopierad",
       selected: "Markerad, tryck Ctrl+C", live: "Procedurell terräng, ritad live i din webbläsare", seeDemos: "Se demos", demo: "Se demot",
-      code: "Källkod", glance: "I korthet",
+      code: "Källkod", glance: "I korthet", caseLink: "Fallstudie", caseEyebrow: "Så fungerar det", problem: "Problemet", approachSteps: "Vad koden gör", limits: "Var den slutar",
       models: "3D", modelsEyebrow: "3D-modeller", modelHint: "Dra för att vrida · scrolla för att zooma", modelPick: "Välj en modell", modelAlt: "3D-modell", modelStill: "Stillbild i förhandsvisningen · vrid den i 3D på portfolio.amastack.com" }
   };
   // pages of this site that have a Swedish copy
@@ -108,7 +108,7 @@
           (data.experience || []).length ? nl("#experience", "briefcase", ui("experience")) : null,
           nl(localize("media.html"), "film", ui("demos")), nl("#about", "user", ui("about")), nl("#contact", "mail", ui("contact"))),
         langSwitch()),
-      ...[plate(), glance(), work(), models(), approach(), experience(), about(), contact()].filter(Boolean),
+      ...[plate(), glance(), work(), cases(), models(), approach(), experience(), about(), contact()].filter(Boolean),
       h("footer", {}, h("p", {}, tx(data, "footer") || ""), h("p", {}, "© " + new Date().getFullYear() + " " + (data.name || "")))
     );
     app.append(wrap);
@@ -222,9 +222,30 @@
     if (a) a.append(ic(external(a.getAttribute("href")) ? "external" : "arrow-right") || " →");
     const b = link(p.demo, tx(p, "demoLabel") || ui("demo"), "more demo");
     if (b) b.prepend(ic("play") || "▶ ");
+    const s = /^#case-[a-z0-9-]+$/.test(p.case || "") ? link(p.case, ui("caseLink"), "more study") : null;
+    if (s) s.prepend(ic("book") || "");
     const c = /^https:\/\//i.test(p.code || "") ? link(p.code, ui("code"), "more code") : null;
     if (c) c.prepend(ic("code") || "</> ");
-    return a || b || c ? h("p", { class: "morerow" }, a, b, c) : null;
+    return a || b || s || c ? h("p", { class: "morerow" }, a, b, s, c) : null;
+  }
+
+  // case studies: a problem, the steps the code takes, and its limits (edited in index.html, like experience)
+  function cases() {
+    const cs = data.cases, items = (cs && cs.items) || [];
+    if (!items.length) return null;
+    const s = h("section", { id: "cases", "aria-labelledby": "casesh" }, h("header", {}, eyebrow("book", ui("caseEyebrow")), h("h2", { id: "casesh" }, tx(cs, "title") || ""),
+      tx(cs, "intro") ? h("p", { class: "col" }, tx(cs, "intro")) : null));
+    s.append(h("div", { class: "cases" }, items.map(x => {
+      const code = /^https:\/\//i.test(x.code || "") ? link(x.code, ui("code"), "more code") : null;
+      if (code) code.prepend(ic("code") || "</> ");
+      return h("article", { class: "case", id: "case-" + x.id, "aria-labelledby": "case-" + x.id + "-h" },
+        h("p", { class: "eyebrow" }, x.project || ""), h("h3", { id: "case-" + x.id + "-h" }, tx(x, "title") || ""),
+        h("h4", {}, ui("problem")), h("p", {}, tx(x, "problem") || ""),
+        h("h4", {}, ui("approachSteps")), h("ol", { class: "steps" }, (tx(x, "steps") || []).map(t => h("li", {}, t))),
+        tx(x, "limits") ? h("div", { class: "limits" }, h("h4", {}, ui("limits")), h("p", {}, tx(x, "limits"))) : null,
+        code ? h("p", { class: "morerow" }, code) : null);
+    })));
+    return s;
   }
   function tagList(p) { const tags = tx(p, "tags") || []; return tags.length ? h("ul", { class: "tags", "aria-label": ui("tools") }, tags.map(t => h("li", {}, t))) : null; }
 
@@ -371,7 +392,7 @@
     const layers = [[".eyebrow", 4], ["h1", 12], [".lede", 7]].map(([s, d]) => [plateEl.querySelector(s), d]).filter(([el]) => el);
     fx.terrain(document.getElementById("topo"), { layers, onFps: (n) => { if (fps) fps.textContent = n ? n + " fps" : ""; } });
     if (editing) return; // the editor re-renders on every change; keep it still
-    fx.reveal(app, "section > header, .feature, .card, .areas > div, .principles li, .cv li, .twocol > div, .contact > *");
+    fx.reveal(app, "section > header, .feature, .card, .case, .areas > div, .principles li, .cv li, .twocol > div, .contact > *");
     fx.tilt(app, ".pic");
   }
 

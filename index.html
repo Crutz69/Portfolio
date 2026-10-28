@@ -93,7 +93,9 @@
     ],
     "linkLabel": "Besök DevMind",
     "coverAlt": "DevMinds startsida: en AI-IDE för datorn där man planerar, kodar och granskar i samma arbetsyta"
-   }
+   },
+   "case": "#case-devmind",
+   "code": "https://github.com/Crutz69/DevMind-Source"
   },
   {
    "title": "DateMe",
@@ -154,7 +156,9 @@
      "Motorprogrammering"
     ],
     "coverAlt": "En skärmytsling: basen syns i grönt, krigsdimma över resten av kartan och byggmenyn längst ned"
-   }
+   },
+   "case": "#case-voxelcommander",
+   "code": "https://github.com/Crutz69/VoxelCommander"
   },
   {
    "title": "Chaos Crown",
@@ -231,6 +235,70 @@
    "code": "https://github.com/Crutz69/ProjektCastleDefence"
   }
  ],
+ "cases": {
+  "title": "Case studies",
+  "intro": "Two problems in detail: what had to work, what the code does about it, and where it stops. Both projects were built with AI coding assistants under my direction.",
+  "items": [
+   {
+    "id": "voxelcommander",
+    "project": "VoxelCommander",
+    "code": "https://github.com/Crutz69/VoxelCommander",
+    "title": "Getting units where they are sent",
+    "problem": "Units cross a tile map with water, buildings and rocks, and players often click where no unit can stand, such as the middle of a building. A path that cuts through a corner, or a unit that freezes because its target is blocked, is the first thing a player notices.",
+    "steps": [
+     "A* on the tile grid, in eight directions. A diagonal step is only allowed when both straight neighbours are free, so units never cut the corner of a building.",
+     "A tile is walkable when it is not water and a small collision probe at its centre touches no building or obstacle.",
+     "A blocked target moves to the nearest walkable tile within eight tiles, so a click on a building still gives a path.",
+     "The search stops after 5 000 nodes. The unit then heads straight for the target instead of stalling the game.",
+     "On the move, a unit skips to the next waypoint whenever it can see it, which straightens the grid path. Units push apart when they overlap, and a unit that has not moved for a second stops."
+    ],
+    "limits": "Every unit runs its own search when it gets an order, and walkability is checked with collision probes instead of a cached grid. A flow field or a cached grid would scale better to large armies.",
+    "sv": {
+     "title": "Att få enheterna dit de skickas",
+     "problem": "Enheterna korsar en rutkarta med vatten, byggnader och klippor, och spelaren klickar ofta där ingen enhet kan stå, till exempel mitt i en byggnad. En väg som skär genom ett hörn, eller en enhet som fryser för att målet är blockerat, är det första en spelare märker.",
+     "steps": [
+      "A* på rutnätet, i åtta riktningar. Ett diagonalt steg tillåts bara när båda raka grannarna är fria, så enheterna skär aldrig genom hörnet på en byggnad.",
+      "En ruta går att gå på när den inte är vatten och en liten kollisionskontroll i mitten inte träffar någon byggnad eller något hinder.",
+      "Ett blockerat mål flyttas till närmaste gångbara ruta inom åtta rutor, så ett klick på en byggnad ger ändå en väg.",
+      "Sökningen avbryts efter 5 000 noder. Enheten går då rakt mot målet i stället för att låsa spelet.",
+      "Under förflyttningen hoppar en enhet till nästa vägpunkt så fort den kan se den, vilket rätar ut vägen längs rutnätet. Enheter knuffar isär när de överlappar, och en enhet som inte har rört sig på en sekund stannar."
+     ],
+     "limits": "Varje enhet gör en egen sökning när den får en order, och gångbarheten kontrolleras med kollisionskontroller i stället för ett sparat rutnät. Ett flödesfält eller ett sparat rutnät skulle skala bättre till stora arméer."
+    }
+   },
+   {
+    "id": "devmind",
+    "project": "DevMind",
+    "code": "https://github.com/Crutz69/DevMind-Source",
+    "title": "Several agents, one codebase",
+    "problem": "DevMind runs up to three worker agents at once, each on its own task. If two of them rewrite the same file, or switch git branches under each other, work is lost.",
+    "steps": [
+     "The planner writes tasks with a target file and dependencies. A task waits until the tasks it depends on are done, and up to three ready tasks run in parallel.",
+     "Before a worker touches a file it takes a lock on that path, so two tasks on the same file run one after the other. The lock is released even when the worker fails.",
+     "All workers share one git working tree, so every git step (reading the file, branching, committing) runs under one shared repository lock.",
+     "A worker never overwrites the file. It writes its version to a .proposed file on its own feature branch and commits it there.",
+     "The real file changes only when the diff is approved in the IDE."
+    ],
+    "limits": "The locks live inside one process, so they do not guard against a second DevMind running on the same folder. With the git steps in series, the agents work in parallel but commit one at a time.",
+    "sv": {
+     "title": "Flera agenter, en kodbas",
+     "problem": "DevMind kör upp till tre arbetaragenter samtidigt, var och en med sin uppgift. Om två av dem skriver om samma fil, eller byter git-gren under varandra, går arbete förlorat.",
+     "steps": [
+      "Planeraren skriver uppgifter med en målfil och beroenden. En uppgift väntar tills de uppgifter den beror på är klara, och upp till tre färdiga uppgifter körs parallellt.",
+      "Innan en arbetare rör en fil låser den sökvägen, så två uppgifter på samma fil körs efter varandra. Låset släpps även när arbetaren misslyckas.",
+      "Alla arbetare delar en git-arbetskopia, så varje git-steg (läsa filen, skapa gren, committa) körs under ett gemensamt lås för förrådet.",
+      "En arbetare skriver aldrig över filen. Den skriver sin version till en .proposed-fil på en egen feature-gren och committar den där.",
+      "Den riktiga filen ändras först när diffen har godkänts i IDE:n."
+     ],
+     "limits": "Låsen finns inuti en process, så de skyddar inte mot en andra DevMind som körs i samma mapp. Eftersom git-stegen körs i tur och ordning arbetar agenterna parallellt men committar en i taget."
+    }
+   }
+  ],
+  "sv": {
+   "title": "Fallstudier",
+   "intro": "Två problem i detalj: vad som måste fungera, vad koden gör åt det och var den slutar. Båda projekten är byggda med AI-kodassistenter under min ledning."
+  }
+ },
  "aboutTitle": "About me",
  "about": "I am a first-year software engineering student at Jönköping University and a co-owner of Amastack. I studied game development at LBS Kreativa Gymnasiet, and I have assembled and tested electronics for the defence industry at Saab Training Systems, where precision and strict technical drawings were part of every day.\n\nI work AI-first. I define the architecture and the rules, review and test every build, and use AI coding assistants and my own agent tooling to implement and iterate fast. My projects range from procedural worlds and gameplay systems to developer tools and web apps.",
  "skills": [
