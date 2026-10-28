@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project Demos</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Gameplay recordings and screenshots from Linus Virebrand's game projects.">
+<link rel="alternate" hreflang="en" href="media.html">
+<link rel="alternate" hreflang="sv" href="media.sv.html">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+/* Demos: one plate per project. A label says what the footage is: a recording of play, or a sequence of stills. */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+.intro { padding-block: 48px 8px; display: grid; gap: 14px; }
+.intro h1 { font-size: clamp(3rem, 10vw, 6.5rem); font-weight: 700; text-transform: uppercase; line-height: .9; }
+.jump { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.jump a { font-family: var(--mono); font-size: .78rem; letter-spacing: .08em; color: var(--ink-soft); text-decoration: none; }
+.jump a:hover { color: var(--accent); }
+.demo { display: grid; gap: 18px; }
+.demo header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+.kind { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; padding: 3px 9px; border: 1px solid currentColor; }
+.kind.live { color: var(--accent); }
+.kind.stills { color: var(--mark); }
+.player { background: var(--ink); aspect-ratio: 16 / 9; }
+.player.wide { aspect-ratio: 1600 / 672; }
+.player video { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--ink); }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+.shots img { aspect-ratio: 16 / 9; object-fit: cover; cursor: zoom-in; }
+.lb { position: fixed; inset: 0; background: rgba(8, 12, 12, .92); display: grid; place-items: center; z-index: 20;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lb img { max-width: 100%; max-height: calc(100vh - 110px); width: auto; height: auto; aspect-ratio: auto; cursor: default; }
+.lb p { color: #dfe7e4; font-size: .9rem; margin-top: 10px; text-align: center; }
+.lb button { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); background: #1c2725; color: #eef3f1; border: 1px solid #3a4a47; font: 500 .9rem var(--body); padding: 8px 14px; cursor: pointer; }
+.lb figure { display: grid; justify-items: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="./">Linus Virebrand</a>
+    <nav aria-label="Site"><a href="./#work">Work</a><a href="media.html">Demos</a><a href="./#about">About</a><a href="./#contact">Contact</a><span class="lang" role="group" aria-label="Language"><a href="media.html" hreflang="en" lang="en" aria-label="English" aria-current="true">EN</a><a href="media.sv.html" hreflang="sv" lang="sv" aria-label="Svenska" onclick="try{localStorage.setItem('portfolio-lang','sv')}catch(e){}">SV</a></span></nav>
+  </header>
+
+  <div class="intro">
+    <p class="eyebrow">Demos</p>
+    <h1>Projects in motion</h1>
+    <p class="col">Gameplay recordings and screenshots from five projects. Each plate says what the footage is: a recording of play, or a sequence of stills from the engine.</p>
+    <nav class="jump" aria-label="Projects on this page"><a href="#trailer">Trailer</a><a href="#castledefence">CastleDefence</a><a href="#chaos-crown">Chaos Crown</a><a href="#sundmark">Sundmark</a><a href="#facility">Test Facility</a><a href="#landmarks">Kvarnvik Landmarks</a></nav>
+  </div>
+
+  <section class="demo" id="trailer" aria-labelledby="tr-h">
+    <header><h2 id="tr-h">Sundmark trailer</h2><span class="kind stills">Sequence of stills</span></header>
+    <p class="col">Fifty seconds through the generated region, its landmarks and the test facility, cut from stills captured in Unreal Engine 5.8. <a href="sundmark.html">Read the case study →</a></p>
+    <div class="player wide"><video controls playsinline preload="metadata" poster="img/trailer-poster.jpg"><source src="media/trailer-en.mp4" type="video/mp4"></video></div>
+  </section>
+
+  <section class="demo" id="castledefence" aria-labelledby="cd-h">
+    <header><h2 id="cd-h">CastleDefence / Emberfall: Factions</h2><span class="kind live">Recorded gameplay</span></header>
+    <p class="col">A browser recording of recruitment, combat and camera controls. <a href="https://crutz69.github.io/ProjektCastleDefence/" target="_blank" rel="noopener">Play it in the browser →</a></p>
+    <div class="player"><video controls playsinline preload="metadata" poster="img/castledefence-gameplay.jpg"><source src="media/castledefence-gameplay.mp4" type="video/mp4"></video></div>
+    <div class="shots">
+      <figure><img src="img/castledefence-gameplay.jpg" alt="Army recruitment and combat in the browser game" loading="lazy"><figcaption>Army recruitment and combat.</figcaption></figure>
+      <figure><img src="img/castledefence-battle.jpg" alt="The battlefield during a campaign stage" loading="lazy"><figcaption>The battlefield during a campaign stage.</figcaption></figure>
+      <figure><img src="img/castledefence-menu.jpg" alt="The game start screen" loading="lazy"><figcaption>The start screen.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="demo" id="chaos-crown" aria-labelledby="cc-h">
+    <header><h2 id="cc-h">Chaos Crown</h2><span class="kind stills">Prototype screenshots</span></header>
+    <p class="col">Combat in the prototype's stress arena, with simple placeholder characters and environment assets.</p>
+    <div class="shots">
+      <figure><img src="img/chaos-crown-gameplay.jpg" alt="Physics-driven RTS units during combat" loading="lazy"><figcaption>Physics-driven units in combat.</figcaption></figure>
+      <figure><img src="img/chaos-crown-formation.jpg" alt="Two opposing armies in the stress arena" loading="lazy"><figcaption>Two armies in the stress arena.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="demo" id="sundmark" aria-labelledby="sm-h">
+    <header><h2 id="sm-h">Sundmark World Builder</h2><span class="kind stills">Sequence of stills</span></header>
+    <p class="col">Screenshots from the editor put in sequence; not live gameplay footage. <a href="sundmark.html">Read the case study →</a></p>
+    <div class="player"><video controls playsinline preload="metadata" poster="img/map_v3_kv_low.jpg"><source src="media/sundmark-walkthrough.mp4" type="video/mp4"></video></div>
+    <div class="shots">
+      <figure><img src="img/plan_region_map.jpg" alt="Region plan for the generated world" loading="lazy"><figcaption>Region plan for the generated world.</figcaption></figure>
+      <figure><img src="img/map_v3_kv_low.jpg" alt="Kvarnvik rooftops and surrounding terrain" loading="lazy"><figcaption>Kvarnvik rooftops and the mountains behind.</figcaption></figure>
+      <figure><img src="img/map_v2_bjork_air.jpg" alt="Aerial view of farms beside a river" loading="lazy"><figcaption>Farms of Björkbacka from the air.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="demo" id="facility" aria-labelledby="tf-h">
+    <header><h2 id="tf-h">Gameplay Test Facility</h2><span class="kind stills">Sequence of stills</span></header>
+    <p class="col">In-game screenshots of the hub and rooms put in sequence; not live gameplay footage. <a href="sundmark.html#facility">All eleven rooms →</a></p>
+    <div class="player"><video controls playsinline preload="metadata" poster="img/fac_hub.jpg"><source src="media/facility-walkthrough.mp4" type="video/mp4"></video></div>
+    <div class="shots">
+      <figure><img src="img/fac_hub.jpg" alt="The central test facility hub" loading="lazy"><figcaption>The hub hall.</figcaption></figure>
+      <figure><img src="img/fac_range.jpg" alt="The shooting range room" loading="lazy"><figcaption>1.7 Shooting range.</figcaption></figure>
+      <figure><img src="img/fac_workshop.jpg" alt="The workshop room with a settler" loading="lazy"><figcaption>1.10 Workshop.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="demo" id="landmarks" aria-labelledby="lm-h">
+    <header><h2 id="lm-h">Kvarnvik Landmarks</h2><span class="kind stills">Sequence of stills</span></header>
+    <p class="col">Editor screenshots of the monastery and the cemetery park put in sequence; not live gameplay footage.</p>
+    <div class="player"><video controls playsinline preload="metadata" poster="img/map_m_aerial.jpg"><source src="media/landmarks-walkthrough.mp4" type="video/mp4"></video></div>
+    <div class="shots">
+      <figure><img src="img/map_m_aerial.jpg" alt="Aerial view of the monastery" loading="lazy"><figcaption>The walled monastery.</figcaption></figure>
+      <figure><img src="img/map_m_gate.jpg" alt="The monastery entrance" loading="lazy"><figcaption>The monastery gate.</figcaption></figure>
+      <figure><img src="img/map_c_aerial.jpg" alt="Aerial view of the cemetery park" loading="lazy"><figcaption>The cemetery park.</figcaption></figure>
+    </div>
+  </section>
+
+  <footer><p>Art assets in the Unreal screenshots come from licensed packs by their authors on Fab and the Unreal Marketplace and from Epic Games' samples.</p></footer>
+</div>
+<script src="fx.js"></script>
+<script>
+document.addEventListener("click", (e) => {
+  const img = e.target.closest(".shots img"); if (!img) return;
+  const cap = img.parentElement.querySelector("figcaption");
+  const lb = document.createElement("div"); lb.className = "lb"; lb.setAttribute("role", "dialog"); lb.setAttribute("aria-label", img.alt);
+  lb.innerHTML = '<button type="button">Close</button><figure><img alt=""><p></p></figure>';
+  lb.querySelector("img").src = img.src; lb.querySelector("img").alt = img.alt; lb.querySelector("p").textContent = cap ? cap.textContent : "";
+  const close = () => { lb.remove(); document.removeEventListener("keydown", key); };
+  const key = (k) => { if (k.key === "Escape") close(); };
+  lb.addEventListener("click", (k) => { if (k.target === lb || k.target.tagName === "BUTTON") close(); });
+  document.addEventListener("keydown", key); document.body.appendChild(lb); lb.querySelector("button").focus();
+});
+if (window.PortfolioFX) PortfolioFX.reveal(document, ".intro > *, .demo > *");
+</script>
+</body>
+</html>

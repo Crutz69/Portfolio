@@ -1,0 +1,7 @@
+# built by build_static.py (Vercel builds it on every push)
+dist/
+# original PNGs and WebM recordings: not published
+source/
+.claude/
+__pycache__/
+.vercel/

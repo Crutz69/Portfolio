@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sundmark World Builder</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="sundmark.html">
+<link rel="alternate" hreflang="sv" href="sundmark.sv.html">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+.crumb { padding-block: 18px 0; font-family: var(--mono); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; }
+.crumb a { color: var(--ink-soft); text-decoration: none; }
+.crumb a:hover { color: var(--accent); }
+.lang { display: inline-flex; gap: 10px; }
+.lang a[aria-current="true"] { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; }
+
+/* Layout: a survey sheet. One reading column, wide figures that break out of it, map plates set like atlas pages. */
+:root {
+  --paper: #eef1f0;        /* cool survey paper */
+  --sheet: #f8faf9;
+  --ink: #17201f;
+  --ink-soft: #4b5755;
+  --rule: #c9d2cf;
+  --accent: #23705f;       /* lichen green: the map's own forest tint */
+  --mark: #b9651d;         /* survey orange for coordinates and figures */
+  --cut: #a13d2d;          /* cut off on the navmesh */
+  --ok: #2c7a62;
+  --void: #d9dfdd;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1615; --sheet: #151e1d; --ink: #e3ebe8; --ink-soft: #9fb0ab; --rule: #2a3735;
+    --accent: #6cc2aa; --mark: #e0954f; --cut: #e0725e; --ok: #5fbf9a; --void: #1d2826; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1615; --sheet: #151e1d; --ink: #e3ebe8; --ink-soft: #9fb0ab; --rule: #2a3735;
+  --accent: #6cc2aa; --mark: #e0954f; --cut: #e0725e; --ok: #5fbf9a; --void: #1d2826; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 72px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+.col { max-width: var(--measure); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: .005em; }
+h2 { font-size: clamp(2rem, 4vw, 2.8rem); }
+h3 { font-size: 1.45rem; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; }
+.mono { font-family: var(--mono); font-size: .82rem; letter-spacing: .02em; }
+.eyebrow { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mark); }
+
+/* hero */
+.hero { position: relative; padding-block: 56px 40px; display: grid; gap: 22px; }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .55; }
+.hero > *:not(canvas) { position: relative; z-index: 1; }
+.hero h1 { font-size: clamp(3rem, 9vw, 6.4rem); font-weight: 700; text-transform: uppercase; letter-spacing: .01em; }
+.hero h1 span { color: var(--accent); }
+.lede { font-size: 1.18rem; max-width: 60ch; color: var(--ink); }
+.byline { display: flex; flex-wrap: wrap; gap: 8px 28px; color: var(--ink-soft); }
+.byline b { color: var(--ink); font-weight: 600; }
+
+.coords { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-soft); }
+
+section { padding-block: 56px 8px; border-top: 1px solid var(--rule); margin-top: 40px; display: grid; gap: 22px; }
+section > header { display: grid; gap: 10px; }
+
+/* numbers strip */
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.figures div { background: var(--sheet); padding: 14px 16px 16px; display: grid; gap: 2px; min-width: 0; }
+.figures b { font-family: var(--display); font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.figures span { color: var(--ink-soft); font-size: .86rem; line-height: 1.35; }
+
+/* pipeline: a real sequence */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; gap: 6px; padding-top: 12px; border-top: 2px solid var(--ink); min-width: 0; }
+.steps li::before { content: "Step " counter(s); font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--mark); }
+.steps h3 { font-size: 1.3rem; }
+.steps p { color: var(--ink-soft); font-size: .94rem; }
+
+/* figures and plates */
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure img { width: 100%; height: auto; display: block; background: var(--void); cursor: zoom-in; }
+figcaption { font-size: .86rem; color: var(--ink-soft); line-height: 1.45; }
+figcaption .mono { color: var(--mark); margin-right: 6px; }
+.wide { display: grid; gap: 14px; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.plates { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.plates img { aspect-ratio: 1; object-fit: cover; }
+
+/* rooms list */
+.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 28px; margin: 0; }
+.rooms div { display: grid; grid-template-columns: 3.2rem 1fr; gap: 2px 10px; padding-block: 10px; border-bottom: 1px solid var(--rule); min-width: 0; }
+.rooms dt { font-family: var(--mono); font-size: .85rem; color: var(--mark); padding-top: 2px; }
+.rooms dd { margin: 0; }
+.rooms dd b { display: block; font-weight: 600; }
+.rooms dd span { color: var(--ink-soft); font-size: .9rem; }
+
+/* navmesh grids */
+.grids { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; }
+.grid-fig canvas { width: 100%; height: auto; aspect-ratio: 1; display: block; background: var(--sheet); border: 1px solid var(--rule); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .84rem; color: var(--ink-soft); }
+.legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; }
+
+/* tables */
+.tbl { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .92rem; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); font-weight: 500; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--mono); font-size: .86rem; }
+tr:last-child td { border-bottom: 0; }
+
+.twocol { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+.twocol > div { display: grid; gap: 12px; align-content: start; min-width: 0; }
+ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+ul.plain li::marker { color: var(--mark); }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--ink); }
+
+/* lightbox */
+.lb { position: fixed; inset: 0; background: rgba(8, 12, 12, .92); display: grid; place-items: center; z-index: 20;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lb img { max-width: 100%; max-height: calc(100vh - 110px); width: auto; height: auto; }
+.lb p { color: #dfe7e4; font-size: .9rem; max-width: 80ch; margin-top: 10px; text-align: center; }
+.lb button { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); background: #1c2725; color: #eef3f1;
+  border: 1px solid #3a4a47; font: 500 .9rem var(--body); padding: 8px 14px; cursor: pointer; }
+.lb figure { display: grid; justify-items: center; }
+
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: .86rem; display: grid; gap: 6px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1, .hero .lede { animation: rise .7s ease-out both; }
+  .hero .lede { animation-delay: .12s; }
+  @keyframes rise { from { transform: translateY(8px); opacity: .001; } to { transform: none; opacity: 1; } }
+}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} img{max-width:100%} [hidden]{display:none!important} body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="crumb" aria-label="Site"><a href="./">← All projects</a><span class="lang" role="group" aria-label="Language"><a href="sundmark.html" hreflang="en" lang="en" aria-label="English" aria-current="true">EN</a><a href="sundmark.sv.html" hreflang="sv" lang="sv" aria-label="Svenska" onclick="try{localStorage.setItem('portfolio-lang','sv')}catch(e){}">SV</a></span></nav>
+  <header class="hero">
+    <canvas id="topo" aria-hidden="true"></canvas>
+    <p class="eyebrow">Portfolio · Unreal Engine 5.8 · 2026</p>
+    <h1>Sundmark <span>World Builder</span></h1>
+    <p class="lede">A procedural pipeline that turns a written design brief into a playable 8 × 8 km Nordic post-apocalyptic region in Unreal Engine, and a test facility where every gameplay system of the game can be tried in its own room.</p>
+    <div class="byline">
+      <span><b>Linus</b>, game design and direction</span>
+      <span>Built with AI coding assistants (Claude) under my direction</span>
+      <span>Project: MySurvivalGame, a first-person survival RPG</span>
+    </div>
+    <div class="coords mono" aria-label="Map facts">
+      <span>Sundmark, a fictional Swedish region</span><span>8 000 × 8 000 m</span><span>2017² heightmap · 3.97 m cells</span><span>spec v0.118</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="role">
+    <header>
+      <p class="eyebrow">What I did</p>
+      <h2 id="role">Design, direction and review</h2>
+    </header>
+    <div class="twocol">
+      <div class="col">
+        <p>I set the vision for the game (Fallout-style exploration and towns, Kenshi-style NPC life, people and vehicles on the roads) and designed the world it plays in: the regions, the towns and their roles, the road hierarchy, the catastrophe story and the look I was after.</p>
+        <p>The code was written by AI coding assistants working from my briefs, in many short iterations. My job was to decide what to build, judge every rendered result against the target, play it, reject what looked fake and set the rules the pipeline must follow, for example that country roads have no kerbs and every road ends on a road of the same or a higher class.</p>
+      </div>
+      <div>
+        <p class="note">Every number on this page was measured in the engine. Where something is not done yet, it says so under <a href="#status">Status</a>.</p>
+        <ul class="plain">
+          <li>World design documents: regions, towns, catastrophe, quality review</li>
+          <li>Rules for terrain, water, roads and bridges the generator checks</li>
+          <li>Review of every build from rendered shots and play</li>
+          <li>Planning: a demo-map plan that puts gameplay first</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="mapgen">
+    <header>
+      <p class="eyebrow">Case study 1</p>
+      <h2 id="mapgen">From a design brief to a playable region</h2>
+      <p class="col">The world starts as a JSON spec: coast, mountains, rivers, towns with their roles, the road network and a bomb crater with its damage field. A Python generator turns it into terrain and plans; Unreal builds the level from those files without anyone placing a single actor by hand.</p>
+    </header>
+
+    <ol class="steps">
+      <li><h3>Write the spec</h3><p>Regions with threat and loot tiers, settlements, road classes, the catastrophe. Versioned with a changelog.</p></li>
+      <li><h3>Generate</h3><p>Python and NumPy: terrain, erosion, rivers and lakes, a least-cost road graph, town and village plans, dressing rules. About 8 minutes.</p></li>
+      <li><h3>Package</h3><p>Roads, bridges, building pads, kit parts and water as plain data files, with QA lints for grades, slopes and overlaps.</p></li>
+      <li><h3>Build the level</h3><p>Headless Unreal steps: a C++ landscape importer, water, vegetation, houses, AAA-kit towns, roads, dressing, bridges, navmesh.</p></li>
+      <li><h3>Review</h3><p>Rendered shots driven from Python over the editor's MCP server, audit scripts, then play in the editor.</p></li>
+    </ol>
+
+    <div class="plates">
+      <figure><img src="img/plan_design_map.jpg" alt="Design map of Sundmark with towns, roads, rivers, the coast and the exclusion zone" loading="lazy"><figcaption><span class="mono">Plate A</span>Design map: towns, the road graph, rivers, coast and the exclusion zone.</figcaption></figure>
+      <figure><img src="img/plan_region_map.jpg" alt="Region map coloured by threat level" loading="lazy"><figcaption><span class="mono">Plate B</span>Sixteen regions, coloured by threat (1 to 10), each with its own loot tier and factions.</figcaption></figure>
+      <figure><img src="img/plan_terrain_analysis.jpg" alt="Terrain analysis with slopes over the limit in red" loading="lazy"><figcaption><span class="mono">Plate C</span>Terrain analysis: slopes over the walkable limit in red, water in blue.</figcaption></figure>
+      <figure><img src="img/plan_preview.jpg" alt="Shaded preview of the generated terrain with towns" loading="lazy"><figcaption><span class="mono">Plate D</span>Shaded preview straight from the generator, before Unreal is opened.</figcaption></figure>
+    </div>
+
+    <div class="figures" role="list">
+      <div role="listitem"><b>531 598</b><span>trees, bushes and rocks placed as instances</span></div>
+      <div role="listitem"><b>733 505</b><span>modular building-kit parts in the towns</span></div>
+      <div role="listitem"><b>1.58 M</b><span>street and yard dressing items</span></div>
+      <div role="listitem"><b>833</b><span>Swedish wooden houses fitted to their pads</span></div>
+      <div role="listitem"><b>~28 k</b><span>lines of Python and C++ in the pipeline</span></div>
+    </div>
+
+    <div class="wide">
+      <figure><img src="img/map_v3_kv_low.jpg" alt="Rooftops of Kvarnvik with mountains in the distance" loading="lazy"><figcaption><span class="mono">Kvarnvik</span>The market town, built from licensed city kits along street plans the generator lays out per block.</figcaption></figure>
+      <div class="pair">
+        <figure><img src="img/map_m_aerial.jpg" alt="Walled monastery with a gothic church, cloister and orchard" loading="lazy"><figcaption><span class="mono">Monastery</span>A gothic church inside castle walls, with a gatehouse, cloister, bell tower and orchard, laid out by one script from the lot it is given.</figcaption></figure>
+        <figure><img src="img/map_c_gate.jpg" alt="Cemetery park with a domed chapel, lanterns and a gravel avenue" loading="lazy"><figcaption><span class="mono">Backparken</span>The cemetery park: chapel, avenue, round place with statues, quarters of graves and walls along the brook.</figcaption></figure>
+      </div>
+      <div class="trio">
+        <figure><img src="img/map_v2_bjork_air.jpg" alt="Farms and fields beside a river" loading="lazy"><figcaption><span class="mono">Björkbacka</span>Farms on their own pads, fields with stone walls, a river with its banks kept dry.</figcaption></figure>
+        <figure><img src="img/map_n_miller_low.jpg" alt="A street in Kvarnvik at street level" loading="lazy"><figcaption><span class="mono">Street level</span>Kerbs, pavements and street lamps only inside town.</figcaption></figure>
+        <figure><img src="img/map_fort4.jpg" alt="Contour map of a mountain road" loading="lazy"><figcaption><span class="mono">QA plot</span>A mountain road checked against truck grades on a 2 m contour plot.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="demo">
+    <header>
+      <p class="eyebrow">Case study 1, continued</p>
+      <h2 id="demo">Cutting a playable demo out of the region</h2>
+      <p class="col">The full region is too heavy to play-test. A crop tool cuts a 2.5 km square around Kvarnvik and the farming village Fjällby out of the same data, keeps every world coordinate, and the same build steps produce a level you can play.</p>
+    </header>
+    <figure><img src="img/map_d1_over2.jpg" alt="Aerial view of the 2.5 km demo square with the town, farms and a mountain" loading="lazy"><figcaption><span class="mono">L_SundmarkDemo</span>The demo square from 900 m. The edge reads as a coast, so the level ends at the sea instead of a wall.</figcaption></figure>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Measurement</th><th>Result</th><th>How it was measured</th></tr></thead>
+        <tbody>
+          <tr><td>Level size</td><td class="num">143 MB</td><td>against 640 MB for the full region</td></tr>
+          <tr><td>Rebuild time</td><td class="num">~4 min</td><td>every step headless, from data to a saved level</td></tr>
+          <tr><td>Frame time</td><td class="num">11.4 ms median</td><td>about 88 fps at 1920 × 1080, Lumen on, RTX 4080 SUPER; render thread is the limit at about 3 000 draw calls</td></tr>
+          <tr><td>Map load</td><td class="num">10.6 s</td><td>standalone game, CSV profile over 2 400 frames</td></tr>
+          <tr><td>Memory added by the map</td><td class="num">~2.5 GB</td><td>against the same run on the small default level</td></tr>
+          <tr><td>Navmesh build</td><td class="num">22 s</td><td>2.5 × 2.5 km, saved with the level</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="nav">
+    <header>
+      <p class="eyebrow">Debugging story</p>
+      <h2 id="nav">Why the NPCs could not leave town</h2>
+      <p class="col">The first navmesh looked complete, yet paths from the town square to half of the villages stopped after a few hundred metres. A flood fill over 50 m cells showed a clean diagonal cut through open countryside. Ruling things out one group at a time found the cause: the river surfaces split the navmesh into islands even with their collision off. With water excluded from navigation and real bridges placed on every crossing, all eleven villages connect.</p>
+    </header>
+    <div class="grids">
+      <figure class="grid-fig"><canvas id="gridBefore" width="500" height="500" role="img" aria-label="Before the fix: 1762 of 2500 cells connected; the north-east is cut off along a diagonal"></canvas><figcaption><span class="mono">Before</span>1 762 of 2 500 cells reachable from the town square.</figcaption></figure>
+      <figure class="grid-fig"><canvas id="gridAfter" width="500" height="500" role="img" aria-label="After the fix: 2446 of 2500 cells connected; only closed courtyards remain"></canvas><figcaption><span class="mono">After</span>2 446 of 2 500 cells. The rest are closed courtyards inside town blocks.</figcaption></figure>
+    </div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>reached from the town square</span><span><i style="background:var(--cut)"></i>navmesh, but cut off</span><span><i style="background:var(--ink)"></i>start: Torget</span></div>
+  </section>
+
+  <section aria-labelledby="facility">
+    <header>
+      <p class="eyebrow">Case study 2</p>
+      <h2 id="facility">The test facility</h2>
+      <p class="col">A hub hall with a booth and a teleport pad for each room, so every system of the game can be tried on its own in a minute. The whole level is built by one script, rooms are probed automatically in play, and my own play-tests drove a rebuild of half the rooms.</p>
+    </header>
+    <figure><img src="img/fac_hub.jpg" alt="The hub hall with coloured booths and the in-game HUD" loading="lazy"><figcaption><span class="mono">Hub</span>In-game view with the HUD: compass, health, food and water. Each booth explains its room and a pad teleports you there.</figcaption></figure>
+    <dl class="rooms">
+      <div><dt>1.1</dt><dd><b>Armory &amp; Loot</b><span>Every pickup, seven containers, physics crates to carry.</span></dd></div>
+      <div><dt>1.2</dt><dd><b>Locks</b><span>Five lockpicking tiers; electronic doors opened from their terminals.</span></dd></div>
+      <div><dt>1.3</dt><dd><b>Hacking</b><span>Signal lock: tune frequency, amplitude and phase to the broadcast.</span></dd></div>
+      <div><dt>1.4</dt><dd><b>Pipe Works</b><span>Gas and fire block three gates; each valve sends a surge.</span></dd></div>
+      <div><dt>1.5</dt><dd><b>Power Restore</b><span>Find three fuses and bring a dead vault door back.</span></dd></div>
+      <div><dt>1.6</dt><dd><b>Dark Room</b><span>Stealth with a light meter, shoot out lamps, silent takedowns.</span></dd></div>
+      <div><dt>1.7</dt><dd><b>Shooting Range</b><span>Dummies, steel plates and barrels at 10, 25 and 50 m.</span></dd></div>
+      <div><dt>1.8</dt><dd><b>Melee Ring</b><span>Jabs, power punches, weapon bashes and the knife.</span></dd></div>
+      <div><dt>1.9</dt><dd><b>Movement</b><span>Ramps from 10° to 50°, steps up to 90 cm, gaps, tunnels.</span></dd></div>
+      <div><dt>1.10</dt><dd><b>Workshop</b><span>Build mode in your own settlement; settlers use what you place.</span></dd></div>
+      <div><dt>1.11</dt><dd><b>Ladders</b><span>Platforms reached only by ladder; the NPC climbs them too.</span></dd></div>
+    </dl>
+    <div class="pair">
+      <figure><img src="img/fac_hack.jpg" alt="Signal lock hacking minigame on a terminal screen" loading="lazy"><figcaption><span class="mono">1.3</span>The signal-lock hack, built in C++ inside the terminal screen.</figcaption></figure>
+      <figure><img src="img/fac_fire.jpg" alt="Fire and gas venting from pipes in front of a gate" loading="lazy"><figcaption><span class="mono">1.4</span>Pipe hazards pulse and hurt until their valve is shut.</figcaption></figure>
+    </div>
+    <div class="trio">
+      <figure><img src="img/fac_dark.jpg" alt="The dark room in red light" loading="lazy"><figcaption><span class="mono">1.6</span>Dark room: three chambers, an S-curve, raiders on guard.</figcaption></figure>
+      <figure><img src="img/fac_range.jpg" alt="Shooting range lanes with targets" loading="lazy"><figcaption><span class="mono">1.7</span>Shooting range with lanes at 10, 25 and 50 m.</figcaption></figure>
+      <figure><img src="img/fac_workshop.jpg" alt="Workshop room with a settler NPC" loading="lazy"><figcaption><span class="mono">1.10</span>Workshop: a settler uses the furniture the player builds.</figcaption></figure>
+      <figure><img src="img/fac_movement.jpg" alt="Movement course with ramps and stairs" loading="lazy"><figcaption><span class="mono">1.9</span>Movement course for testing the character controller.</figcaption></figure>
+      <figure><img src="img/fac_melee.jpg" alt="Melee ring with training dummies" loading="lazy"><figcaption><span class="mono">1.8</span>Melee ring.</figcaption></figure>
+      <figure><img src="img/fac_ladders.jpg" alt="Ladder room with a ladder to a platform" loading="lazy"><figcaption><span class="mono">1.11</span>Ladders, used by the player and by NPCs.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="tech">
+    <header>
+      <p class="eyebrow">Under the hood</p>
+      <h2 id="tech">Tools and techniques</h2>
+    </header>
+    <div class="twocol">
+      <div>
+        <h3>World pipeline</h3>
+        <ul class="plain">
+          <li>Python, NumPy, SciPy and OpenCV for terrain, hydrology, road graphs and town plans</li>
+          <li>A C++ editor library for landscape import, instancing and spline meshes</li>
+          <li>Headless Unreal commandlets chained by a build script, each step checked by its report</li>
+          <li>Rendered review and editor control over Unreal's MCP server</li>
+          <li>Navmesh probes: flood fill, navmesh raycasts and path checks from Python</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Gameplay in the test facility</h3>
+        <ul class="plain">
+          <li>C++ systems: teleport pads, pipe hazards and valves, fuse box, terminals and linked doors, lockpicking and signal-lock screens, puzzles</li>
+          <li>A 942-line Python builder for the whole level</li>
+          <li>Automated in-game probes per room and Unreal automation tests for locks and hacking</li>
+          <li>NPCs that climb ladders, use furniture and react to light</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="status" aria-labelledby="statush">
+    <header>
+      <p class="eyebrow">Status, October 2026</p>
+      <h2 id="statush">Where it stands</h2>
+    </header>
+    <div class="twocol">
+      <div>
+        <h3>Working</h3>
+        <ul class="plain">
+          <li>The full region and the demo level build from data, end to end</li>
+          <li>The demo level loads, plays in the editor and has a connected navmesh</li>
+          <li>All eleven test rooms, probed in play</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Next</h3>
+        <ul class="plain">
+          <li>Roads as game road actors, so patrols, traders and vehicles travel between towns</li>
+          <li>Enterable buildings, starting with the monastery church</li>
+          <li>Neutral Nordic daylight and conifer forests; the current light is too golden</li>
+          <li>A long play-through of the demo at player height</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Art assets come from licensed packs by their authors on Fab and the Unreal Marketplace, among them WW2 City, Parisian Street, Ravenhold, Dubrovnik, Bridge Environment, cemetery and decal packs and Megascans, and from Epic Games' Electric Dreams and Content Examples samples. The pipeline, the level layouts and the gameplay code are the project's own.</p>
+    <p>Screens are captured in Unreal Engine 5.8: the region shots in the editor, the facility shots in play.</p>
+  </footer>
+</div>
+
+<script src="fx.js"></script>
+<script>
+(function () {
+  // --- topographic lines behind the title (a fixed noise field, drawn once) ---
+  const cv = document.getElementById("topo");
+  function topo() {
+    if (window.PortfolioFX) { PortfolioFX.terrain(cv); return; } // live 3D terrain (fx.js); the 2D contours below are the fallback
+    const r = cv.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    const g = cv.getContext("2d"); g.clearRect(0, 0, cv.width, cv.height);
+    const col = getComputedStyle(document.documentElement).getPropertyValue("--rule").trim() || "#c9d2cf";
+    const W = 120, H = Math.max(40, Math.round(120 * cv.height / cv.width)); const f = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const u = x / W * 6, v = y / H * 6 * H / W;
+      f[y * W + x] = Math.sin(u * 1.1 + Math.cos(v * .9)) + .6 * Math.cos(v * 1.7 - u * .5) + .35 * Math.sin((u + v) * 2.3) + u * .18;
+    }
+    g.strokeStyle = col; g.lineWidth = 1 * dpr; const sx = cv.width / (W - 1), sy = cv.height / (H - 1);
+    for (let lv = -2; lv <= 3; lv += .22) {
+      g.beginPath();
+      for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) {
+        const a = f[y * W + x], b = f[y * W + x + 1], c = f[(y + 1) * W + x + 1], d = f[(y + 1) * W + x];
+        const pts = []; const e = (p, q, x0, y0, x1, y1) => { if ((p < lv) !== (q < lv)) { const t = (lv - p) / (q - p); pts.push([(x0 + (x1 - x0) * t) * sx, (y0 + (y1 - y0) * t) * sy]); } };
+        e(a, b, x, y, x + 1, y); e(b, c, x + 1, y, x + 1, y + 1); e(c, d, x + 1, y + 1, x, y + 1); e(d, a, x, y + 1, x, y);
+        if (pts.length >= 2) { g.moveTo(pts[0][0], pts[0][1]); g.lineTo(pts[1][0], pts[1][1]); }
+      }
+      g.stroke();
+    }
+  }
+
+  // --- navmesh flood-fill grids (probe_nav.py output, 50 m cells, north at the top) ---
+  const before = [
+"##################................................","###################...............................","####################..............................","#####################.............................","######################............................","#######################...........................","########################..........................","#########################.........................","##########################........................","###########################.......................","############################......................","#############################.....................","##############################....................","###############################...................","################################..................","############################.####.................","######################.########.##................","###################################...............","###############################..###..............","#################################.................","##########################..#.#####..#............","##########################..#.######.#............","##########################..#.##########..........","#############.###############..##..######.........","#############..##############..#.....#####........","##############..##########.###........#####.......","###############..#................................","###########.......................................","##########........................................","###############...................................","#########################...................##....","############################.##.###...###########.","###############################..#####.###########","##########################.##.######.#############","##################################################","##################################################","##################################################","##################################################","##################################################","#############################.####################","##################################################","##################################################","##################################################","##################################################","##################################################","########################.#########################","##################################################","##################################################","##################################################","##################################################"];
+  const after = [
+"##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##########################.#######################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","############################.#####################","######################.########.##################","##################################################","###############################..#################","#################################...##############","##########################..#.#####..#############","##########################..#.######.#############","##########################..#.####################","#############################..##..###############","#############################..#.....#############","##########################.###....#...############","##########################.#######################","##################################################","##################################################","##################################################","##################################################","############################.##.###...############","###############################..#####.###########","##########################.##.######.#############","##################################################","##################################################","##################################################","##################################################","##################################################","#############################.####################","##################################################","##################################################","##################################################","##################################################","##################################################","########################.#########################","##################################################","##################################################","##################################################","##################################################"];
+  // the start, Torget at x 2769, y 4324 m: column (2769-1225)/50, row from the north (5425-4324)/50
+  const START = [31, 22];
+  function grid(id, rows) {
+    const c = document.getElementById(id); const g = c.getContext("2d"); const css = getComputedStyle(document.documentElement);
+    const ok = css.getPropertyValue("--ok").trim(), cut = css.getPropertyValue("--cut").trim(), ink = css.getPropertyValue("--ink").trim(), bg = css.getPropertyValue("--sheet").trim();
+    const n = rows.length, s = c.width / n; g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
+    rows.forEach((row, j) => [...row].forEach((ch, i) => {
+      if (ch === " ") return; g.fillStyle = ch === "#" ? ok : cut; g.globalAlpha = ch === "#" ? .55 : .9; g.fillRect(i * s + .5, j * s + .5, s - 1, s - 1);
+    }));
+    g.globalAlpha = 1; g.fillStyle = ink; g.beginPath(); g.arc((START[0] + .5) * s, (START[1] + .5) * s, s * .9, 0, Math.PI * 2); g.fill();
+  }
+  function draw() { topo(); grid("gridBefore", before); grid("gridAfter", after); }
+  draw();
+  if (window.PortfolioFX) {
+    PortfolioFX.reveal(document, "section > header, section > .twocol > div, .steps li, .plates figure, .figures > div, .wide > figure, .pair figure, .trio figure, .tbl, .rooms > div, .grids figure");
+  }
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(topo, 150); });
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw); } catch (e) {}
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // --- lightbox ---
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest("figure img"); if (!img) return;
+    const cap = img.parentElement.querySelector("figcaption");
+    const lb = document.createElement("div"); lb.className = "lb"; lb.setAttribute("role", "dialog"); lb.setAttribute("aria-label", img.alt);
+    lb.innerHTML = '<button type="button">Close</button><figure><img alt=""><p></p></figure>';
+    lb.querySelector("img").src = img.src; lb.querySelector("img").alt = img.alt; lb.querySelector("p").textContent = cap ? cap.textContent : "";
+    const close = () => { lb.remove(); document.removeEventListener("keydown", key); img.focus && img.focus(); };
+    const key = (k) => { if (k.key === "Escape") close(); };
+    lb.addEventListener("click", (k) => { if (k.target === lb || k.target.tagName === "BUTTON") close(); });
+    document.addEventListener("keydown", key); document.body.appendChild(lb); lb.querySelector("button").focus();
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sundmark World Builder</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="sundmark.html">
+<link rel="alternate" hreflang="sv" href="sundmark.sv.html">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+.crumb { padding-block: 18px 0; font-family: var(--mono); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; }
+.crumb a { color: var(--ink-soft); text-decoration: none; }
+.crumb a:hover { color: var(--accent); }
+.lang { display: inline-flex; gap: 10px; }
+.lang a[aria-current="true"] { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; }
+
+/* Layout: a survey sheet. One reading column, wide figures that break out of it, map plates set like atlas pages. */
+:root {
+  --paper: #eef1f0;        /* cool survey paper */
+  --sheet: #f8faf9;
+  --ink: #17201f;
+  --ink-soft: #4b5755;
+  --rule: #c9d2cf;
+  --accent: #23705f;       /* lichen green: the map's own forest tint */
+  --mark: #b9651d;         /* survey orange for coordinates and figures */
+  --cut: #a13d2d;          /* cut off on the navmesh */
+  --ok: #2c7a62;
+  --void: #d9dfdd;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1615; --sheet: #151e1d; --ink: #e3ebe8; --ink-soft: #9fb0ab; --rule: #2a3735;
+    --accent: #6cc2aa; --mark: #e0954f; --cut: #e0725e; --ok: #5fbf9a; --void: #1d2826; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1615; --sheet: #151e1d; --ink: #e3ebe8; --ink-soft: #9fb0ab; --rule: #2a3735;
+  --accent: #6cc2aa; --mark: #e0954f; --cut: #e0725e; --ok: #5fbf9a; --void: #1d2826; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 72px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+.col { max-width: var(--measure); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: .005em; }
+h2 { font-size: clamp(2rem, 4vw, 2.8rem); }
+h3 { font-size: 1.45rem; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; }
+.mono { font-family: var(--mono); font-size: .82rem; letter-spacing: .02em; }
+.eyebrow { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mark); }
+
+/* hero */
+.hero { position: relative; padding-block: 56px 40px; display: grid; gap: 22px; }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .55; }
+.hero > *:not(canvas) { position: relative; z-index: 1; }
+.hero h1 { font-size: clamp(3rem, 9vw, 6.4rem); font-weight: 700; text-transform: uppercase; letter-spacing: .01em; }
+.hero h1 span { color: var(--accent); }
+.lede { font-size: 1.18rem; max-width: 60ch; color: var(--ink); }
+.byline { display: flex; flex-wrap: wrap; gap: 8px 28px; color: var(--ink-soft); }
+.byline b { color: var(--ink); font-weight: 600; }
+
+.coords { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-soft); }
+
+section { padding-block: 56px 8px; border-top: 1px solid var(--rule); margin-top: 40px; display: grid; gap: 22px; }
+section > header { display: grid; gap: 10px; }
+
+/* numbers strip */
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.figures div { background: var(--sheet); padding: 14px 16px 16px; display: grid; gap: 2px; min-width: 0; }
+.figures b { font-family: var(--display); font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.figures span { color: var(--ink-soft); font-size: .86rem; line-height: 1.35; }
+
+/* pipeline: a real sequence */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; gap: 6px; padding-top: 12px; border-top: 2px solid var(--ink); min-width: 0; }
+.steps li::before { content: "Steg " counter(s); font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--mark); }
+.steps h3 { font-size: 1.3rem; }
+.steps p { color: var(--ink-soft); font-size: .94rem; }
+
+/* figures and plates */
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure img { width: 100%; height: auto; display: block; background: var(--void); cursor: zoom-in; }
+figcaption { font-size: .86rem; color: var(--ink-soft); line-height: 1.45; }
+figcaption .mono { color: var(--mark); margin-right: 6px; }
+.wide { display: grid; gap: 14px; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.plates { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.plates img { aspect-ratio: 1; object-fit: cover; }
+
+/* rooms list */
+.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 28px; margin: 0; }
+.rooms div { display: grid; grid-template-columns: 3.2rem 1fr; gap: 2px 10px; padding-block: 10px; border-bottom: 1px solid var(--rule); min-width: 0; }
+.rooms dt { font-family: var(--mono); font-size: .85rem; color: var(--mark); padding-top: 2px; }
+.rooms dd { margin: 0; }
+.rooms dd b { display: block; font-weight: 600; }
+.rooms dd span { color: var(--ink-soft); font-size: .9rem; }
+
+/* navmesh grids */
+.grids { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; }
+.grid-fig canvas { width: 100%; height: auto; aspect-ratio: 1; display: block; background: var(--sheet); border: 1px solid var(--rule); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .84rem; color: var(--ink-soft); }
+.legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; }
+
+/* tables */
+.tbl { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .92rem; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); font-weight: 500; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--mono); font-size: .86rem; }
+tr:last-child td { border-bottom: 0; }
+
+.twocol { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+.twocol > div { display: grid; gap: 12px; align-content: start; min-width: 0; }
+ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+ul.plain li::marker { color: var(--mark); }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--ink); }
+
+/* lightbox */
+.lb { position: fixed; inset: 0; background: rgba(8, 12, 12, .92); display: grid; place-items: center; z-index: 20;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lb img { max-width: 100%; max-height: calc(100vh - 110px); width: auto; height: auto; }
+.lb p { color: #dfe7e4; font-size: .9rem; max-width: 80ch; margin-top: 10px; text-align: center; }
+.lb button { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); background: #1c2725; color: #eef3f1;
+  border: 1px solid #3a4a47; font: 500 .9rem var(--body); padding: 8px 14px; cursor: pointer; }
+.lb figure { display: grid; justify-items: center; }
+
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: .86rem; display: grid; gap: 6px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1, .hero .lede { animation: rise .7s ease-out both; }
+  .hero .lede { animation-delay: .12s; }
+  @keyframes rise { from { transform: translateY(8px); opacity: .001; } to { transform: none; opacity: 1; } }
+}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} img{max-width:100%} [hidden]{display:none!important} body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="crumb" aria-label="Webbplats"><a href="./?lang=sv">← Alla projekt</a><span class="lang" role="group" aria-label="Språk"><a href="sundmark.html" hreflang="en" lang="en" aria-label="English" onclick="try{localStorage.setItem('portfolio-lang','en')}catch(e){}">EN</a><a href="sundmark.sv.html" hreflang="sv" lang="sv" aria-label="Svenska" aria-current="true">SV</a></span></nav>
+  <header class="hero">
+    <canvas id="topo" aria-hidden="true"></canvas>
+    <p class="eyebrow">Portfolio · Unreal Engine 5.8 · 2026</p>
+    <h1>Sundmark <span>World Builder</span></h1>
+    <p class="lede">En procedurell pipeline som gör om en skriven designbrief till en spelbar nordisk postapokalyptisk region på 8 × 8 km i Unreal Engine, och en testanläggning där varje gameplaysystem i spelet kan provas i ett eget rum.</p>
+    <div class="byline">
+      <span><b>Linus</b>, speldesign och regi</span>
+      <span>Byggt med AI-kodassistenter (Claude) under min ledning</span>
+      <span>Projekt: MySurvivalGame, ett överlevnads-RPG i förstaperson</span>
+    </div>
+    <div class="coords mono" aria-label="Fakta om kartan">
+      <span>Sundmark, ett fiktivt svenskt landskap</span><span>8 000 × 8 000 m</span><span>höjdkarta 2017² · celler på 3,97 m</span><span>spec v0.118</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="role">
+    <header>
+      <p class="eyebrow">Vad jag gjorde</p>
+      <h2 id="role">Design, regi och granskning</h2>
+    </header>
+    <div class="twocol">
+      <div class="col">
+        <p>Jag satte visionen för spelet (utforskande och städer i Fallout-stil, NPC-liv i Kenshi-stil, människor och fordon på vägarna) och designade världen det utspelar sig i: regionerna, städerna och deras roller, väghierarkin, berättelsen om katastrofen och utseendet jag var ute efter.</p>
+        <p>Koden skrevs av AI-kodassistenter utifrån mina briefar, i många korta iterationer. Mitt jobb var att bestämma vad som skulle byggas, bedöma varje renderat resultat mot målet, spela det, underkänna det som såg falskt ut och sätta reglerna som pipelinen måste följa, till exempel att landsvägar saknar kantsten och att varje väg slutar i en väg av samma eller högre klass.</p>
+      </div>
+      <div>
+        <p class="note">Varje siffra på den här sidan är uppmätt i motorn. Där något inte är klart än står det under <a href="#status">Status</a>.</p>
+        <ul class="plain">
+          <li>Designdokument för världen: regioner, städer, katastrof, kvalitetsgranskning</li>
+          <li>Regler för terräng, vatten, vägar och broar som generatorn kontrollerar</li>
+          <li>Granskning av varje bygge genom renderade bilder och spel</li>
+          <li>Planering: en plan för demokartan som sätter gameplay först</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="mapgen">
+    <header>
+      <p class="eyebrow">Fallstudie 1</p>
+      <h2 id="mapgen">Från designbrief till spelbar region</h2>
+      <p class="col">Världen börjar som en JSON-spec: kust, berg, floder, städer med sina roller, vägnätet och en bombkrater med sitt skadeområde. En generator i Python gör om den till terräng och planer; Unreal bygger nivån från de filerna utan att någon placerar en enda aktör för hand.</p>
+    </header>
+
+    <ol class="steps">
+      <li><h3>Skriv specen</h3><p>Regioner med hot- och lootnivåer, bosättningar, vägklasser, katastrofen. Versionshanterad med ändringslogg.</p></li>
+      <li><h3>Generera</h3><p>Python och NumPy: terräng, erosion, floder och sjöar, en vägraf efter lägsta kostnad, planer för städer och byar, regler för dekor. Ungefär 8 minuter.</p></li>
+      <li><h3>Paketera</h3><p>Vägar, broar, husplattor, byggsatsdelar och vatten som enkla datafiler, med QA-kontroller av väglutning, terränglutning och överlapp.</p></li>
+      <li><h3>Bygg nivån</h3><p>Headless-steg i Unreal: en landskapsimportör i C++, vatten, vegetation, hus, städer av AAA-byggsatser, vägar, dekor, broar, navmesh.</p></li>
+      <li><h3>Granska</h3><p>Renderade bilder styrda från Python via editorns MCP-server, granskningsskript, sedan spel i editorn.</p></li>
+    </ol>
+
+    <div class="plates">
+      <figure><img src="img/plan_design_map.jpg" alt="Designkarta över Sundmark med städer, vägar, floder, kusten och avspärrningszonen" loading="lazy"><figcaption><span class="mono">Plansch A</span>Designkarta: städer, vägrafen, floder, kust och avspärrningszonen.</figcaption></figure>
+      <figure><img src="img/plan_region_map.jpg" alt="Regionkarta färgad efter hotnivå" loading="lazy"><figcaption><span class="mono">Plansch B</span>Sexton regioner, färgade efter hotnivå (1 till 10), var och en med egen lootnivå och egna fraktioner.</figcaption></figure>
+      <figure><img src="img/plan_terrain_analysis.jpg" alt="Terränganalys med för branta sluttningar i rött" loading="lazy"><figcaption><span class="mono">Plansch C</span>Terränganalys: sluttningar brantare än gränsen för att gå i rött, vatten i blått.</figcaption></figure>
+      <figure><img src="img/plan_preview.jpg" alt="Skuggad förhandsvisning av den genererade terrängen med städer" loading="lazy"><figcaption><span class="mono">Plansch D</span>Skuggad förhandsvisning direkt från generatorn, innan Unreal öppnas.</figcaption></figure>
+    </div>
+
+    <div class="figures" role="list">
+      <div role="listitem"><b>531 598</b><span>träd, buskar och stenar placerade som instanser</span></div>
+      <div role="listitem"><b>733 505</b><span>delar ur modulära byggsatser i städerna</span></div>
+      <div role="listitem"><b>1,58 milj.</b><span>dekorföremål på gator och gårdar</span></div>
+      <div role="listitem"><b>833</b><span>svenska trähus anpassade till sina plattor</span></div>
+      <div role="listitem"><b>~28 000</b><span>rader Python och C++ i pipelinen</span></div>
+    </div>
+
+    <div class="wide">
+      <figure><img src="img/map_v3_kv_low.jpg" alt="Kvarnviks hustak med berg i fjärran" loading="lazy"><figcaption><span class="mono">Kvarnvik</span>Marknadsstaden, byggd av licensierade stadsbyggsatser längs gatuplaner som generatorn lägger ut kvarter för kvarter.</figcaption></figure>
+      <div class="pair">
+        <figure><img src="img/map_m_aerial.jpg" alt="Kloster inom murar med gotisk kyrka, korsgång och fruktträdgård" loading="lazy"><figcaption><span class="mono">Klostret</span>En gotisk kyrka inom borgmurar, med porthus, korsgång, klocktorn och fruktträdgård, utlagd av ett enda skript utifrån tomten den får.</figcaption></figure>
+        <figure><img src="img/map_c_gate.jpg" alt="Kyrkogårdspark med kupolkapell, lyktor och en grusallé" loading="lazy"><figcaption><span class="mono">Backparken</span>Kyrkogårdsparken: kapell, allé, en rundel med statyer, gravkvarter och murar längs bäcken.</figcaption></figure>
+      </div>
+      <div class="trio">
+        <figure><img src="img/map_v2_bjork_air.jpg" alt="Gårdar och åkrar vid en flod" loading="lazy"><figcaption><span class="mono">Björkbacka</span>Gårdar på egna plattor, åkrar med stenmurar och en flod vars stränder hålls torra.</figcaption></figure>
+        <figure><img src="img/map_n_miller_low.jpg" alt="En gata i Kvarnvik i gatuhöjd" loading="lazy"><figcaption><span class="mono">Gatunivå</span>Kantsten, trottoarer och gatlyktor bara inne i stan.</figcaption></figure>
+        <figure><img src="img/map_fort4.jpg" alt="Höjdkurvkarta över en bergsväg" loading="lazy"><figcaption><span class="mono">QA-plot</span>En bergsväg kontrollerad mot lutningskraven för lastbilar på en karta med 2 m ekvidistans.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="demo">
+    <header>
+      <p class="eyebrow">Fallstudie 1, fortsättning</p>
+      <h2 id="demo">Ett spelbart demo skuret ur regionen</h2>
+      <p class="col">Hela regionen är för tung att speltesta. Ett beskärningsverktyg skär ut en kvadrat på 2,5 km runt Kvarnvik och jordbruksbyn Fjällby ur samma data och behåller alla världskoordinater, och samma byggsteg ger en nivå som går att spela.</p>
+    </header>
+    <figure><img src="img/map_d1_over2.jpg" alt="Flygbild över demokvadraten på 2,5 km med staden, gårdar och ett berg" loading="lazy"><figcaption><span class="mono">L_SundmarkDemo</span>Demokvadraten från 900 m höjd. Kanten ser ut som en kust, så nivån slutar vid havet i stället för vid en vägg.</figcaption></figure>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Mätning</th><th>Resultat</th><th>Hur det mättes</th></tr></thead>
+        <tbody>
+          <tr><td>Nivåstorlek</td><td class="num">143 MB</td><td>mot 640 MB för hela regionen</td></tr>
+          <tr><td>Byggtid</td><td class="num">~4 min</td><td>alla steg headless, från data till sparad nivå</td></tr>
+          <tr><td>Bildtid</td><td class="num">11,4 ms median</td><td>ungefär 88 fps i 1920 × 1080, Lumen på, RTX 4080 SUPER; renderingstråden sätter gränsen vid ungefär 3 000 draw calls</td></tr>
+          <tr><td>Laddning av kartan</td><td class="num">10,6 s</td><td>fristående spel, CSV-profil över 2 400 bildrutor</td></tr>
+          <tr><td>Minne som kartan lägger till</td><td class="num">~2,5 GB</td><td>jämfört med samma körning på den lilla standardnivån</td></tr>
+          <tr><td>Bygge av navmesh</td><td class="num">22 s</td><td>2,5 × 2,5 km, sparad med nivån</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="nav">
+    <header>
+      <p class="eyebrow">Felsökning</p>
+      <h2 id="nav">Varför NPC:erna inte kunde lämna stan</h2>
+      <p class="col">Den första navmeshen såg komplett ut, men rutterna från torget till hälften av byarna tog slut efter några hundra meter. En flood fill över celler på 50 m visade ett rent diagonalt snitt genom öppen landsbygd. Genom att utesluta en grupp i taget hittades orsaken: flodernas ytor delade navmeshen i öar, även med kollisionen avstängd. När vattnet undantogs från navigeringen och riktiga broar placerades vid varje korsning hängde alla elva byar ihop.</p>
+    </header>
+    <div class="grids">
+      <figure class="grid-fig"><canvas id="gridBefore" width="500" height="500" role="img" aria-label="Före åtgärden: 1762 av 2500 celler sammanhängande; nordost är avskuret längs en diagonal"></canvas><figcaption><span class="mono">Före</span>1 762 av 2 500 celler nås från torget.</figcaption></figure>
+      <figure class="grid-fig"><canvas id="gridAfter" width="500" height="500" role="img" aria-label="Efter åtgärden: 2446 av 2500 celler sammanhängande; bara slutna innergårdar återstår"></canvas><figcaption><span class="mono">Efter</span>2 446 av 2 500 celler. Resten är slutna innergårdar i stadskvarteren.</figcaption></figure>
+    </div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>nås från torget</span><span><i style="background:var(--cut)"></i>navmesh, men avskuret</span><span><i style="background:var(--ink)"></i>start: Torget</span></div>
+  </section>
+
+  <section aria-labelledby="facility">
+    <header>
+      <p class="eyebrow">Fallstudie 2</p>
+      <h2 id="facility">Testanläggningen</h2>
+      <p class="col">En central hall med en monter och en teleportplatta för varje rum, så att varje system i spelet kan provas för sig på en minut. Hela nivån byggs av ett enda skript, rummen kontrolleras automatiskt i spel, och mina egna speltester ledde till att hälften av rummen byggdes om.</p>
+    </header>
+    <figure><img src="img/fac_hub.jpg" alt="Den centrala hallen med färgade montrar och spelets HUD" loading="lazy"><figcaption><span class="mono">Hallen</span>Vy i spelet med HUD: kompass, hälsa, mat och vatten. Varje monter förklarar sitt rum och en platta teleporterar dig dit.</figcaption></figure>
+    <dl class="rooms">
+      <div><dt>1.1</dt><dd><b>Vapenförråd och loot</b><span>Alla föremål att plocka upp, sju behållare, fysiklådor att bära.</span></dd></div>
+      <div><dt>1.2</dt><dd><b>Lås</b><span>Fem nivåer av dyrkning; elektroniska dörrar som öppnas från sina terminaler.</span></dd></div>
+      <div><dt>1.3</dt><dd><b>Hackning</b><span>Signallås: ställ in frekvens, amplitud och fas mot sändningen.</span></dd></div>
+      <div><dt>1.4</dt><dd><b>Rörverket</b><span>Gas och eld blockerar tre grindar; varje ventil skickar en tryckstöt.</span></dd></div>
+      <div><dt>1.5</dt><dd><b>Strömmen tillbaka</b><span>Hitta tre säkringar och få liv i en död valvdörr.</span></dd></div>
+      <div><dt>1.6</dt><dd><b>Mörka rummet</b><span>Smygande med ljusmätare, lampor att skjuta sönder, tysta nedtagningar.</span></dd></div>
+      <div><dt>1.7</dt><dd><b>Skjutbanan</b><span>Dockor, stålplåtar och tunnor på 10, 25 och 50 m.</span></dd></div>
+      <div><dt>1.8</dt><dd><b>Närstridsringen</b><span>Jabbar, kraftslag, slag med vapnet och kniven.</span></dd></div>
+      <div><dt>1.9</dt><dd><b>Rörelse</b><span>Ramper från 10° till 50°, trappsteg upp till 90 cm, glapp och tunnlar.</span></dd></div>
+      <div><dt>1.10</dt><dd><b>Verkstaden</b><span>Byggläge i din egen bosättning; nybyggarna använder det du placerar.</span></dd></div>
+      <div><dt>1.11</dt><dd><b>Stegar</b><span>Plattformar som bara nås via stege; NPC:n klättrar också.</span></dd></div>
+    </dl>
+    <div class="pair">
+      <figure><img src="img/fac_hack.jpg" alt="Minispel för att hacka ett signallås på en terminalskärm" loading="lazy"><figcaption><span class="mono">1.3</span>Signallåshacket, byggt i C++ inne i terminalskärmen.</figcaption></figure>
+      <figure><img src="img/fac_fire.jpg" alt="Eld och gas som strömmar ur rör framför en grind" loading="lazy"><figcaption><span class="mono">1.4</span>Rören pulserar och skadar tills ventilen stängs.</figcaption></figure>
+    </div>
+    <div class="trio">
+      <figure><img src="img/fac_dark.jpg" alt="Mörka rummet i rött ljus" loading="lazy"><figcaption><span class="mono">1.6</span>Mörka rummet: tre kammare, en S-kurva och plundrare på vakt.</figcaption></figure>
+      <figure><img src="img/fac_range.jpg" alt="Skjutbanans banor med mål" loading="lazy"><figcaption><span class="mono">1.7</span>Skjutbana med banor på 10, 25 och 50 m.</figcaption></figure>
+      <figure><img src="img/fac_workshop.jpg" alt="Verkstadsrummet med en nybyggare" loading="lazy"><figcaption><span class="mono">1.10</span>Verkstaden: en nybyggare använder möblerna som spelaren bygger.</figcaption></figure>
+      <figure><img src="img/fac_movement.jpg" alt="Rörelsebana med ramper och trappor" loading="lazy"><figcaption><span class="mono">1.9</span>Rörelsebana för att testa karaktärskontrollen.</figcaption></figure>
+      <figure><img src="img/fac_melee.jpg" alt="Närstridsring med träningsdockor" loading="lazy"><figcaption><span class="mono">1.8</span>Närstridsringen.</figcaption></figure>
+      <figure><img src="img/fac_ladders.jpg" alt="Stegrummet med en stege upp till en plattform" loading="lazy"><figcaption><span class="mono">1.11</span>Stegar som både spelaren och NPC:er använder.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="tech">
+    <header>
+      <p class="eyebrow">Under huven</p>
+      <h2 id="tech">Verktyg och tekniker</h2>
+    </header>
+    <div class="twocol">
+      <div>
+        <h3>Världspipelinen</h3>
+        <ul class="plain">
+          <li>Python, NumPy, SciPy och OpenCV för terräng, hydrologi, vägrafer och stadsplaner</li>
+          <li>Ett editorbibliotek i C++ för landskapsimport, instansiering och spline-meshar</li>
+          <li>Headless-commandlets i Unreal som kedjas av ett byggskript, där varje steg kontrolleras via sin rapport</li>
+          <li>Renderad granskning och styrning av editorn via Unreals MCP-server</li>
+          <li>Navmesh-prober från Python: flood fill, raycasts mot navmeshen och kontroller av rutter</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Gameplay i testanläggningen</h3>
+        <ul class="plain">
+          <li>C++-system: teleportplattor, farliga rör och ventiler, säkringsskåp, terminaler med kopplade dörrar, skärmar för dyrkning och signallås, pussel</li>
+          <li>En byggare i Python på 942 rader för hela nivån</li>
+          <li>Automatiska prober i spelet för varje rum och automationstester i Unreal för lås och hackning</li>
+          <li>NPC:er som klättrar i stegar, använder möbler och reagerar på ljus</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="status" aria-labelledby="statush">
+    <header>
+      <p class="eyebrow">Status, oktober 2026</p>
+      <h2 id="statush">Läget just nu</h2>
+    </header>
+    <div class="twocol">
+      <div>
+        <h3>Fungerar</h3>
+        <ul class="plain">
+          <li>Hela regionen och demonivån byggs från data, hela vägen</li>
+          <li>Demonivån laddar, går att spela i editorn och har en sammanhängande navmesh</li>
+          <li>Alla elva testrum, kontrollerade i spel</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Nästa steg</h3>
+        <ul class="plain">
+          <li>Vägarna som vägaktörer i spelet, så att patruller, handlare och fordon kan resa mellan städerna</li>
+          <li>Byggnader man kan gå in i, med början i klosterkyrkan</li>
+          <li>Neutralt nordiskt dagsljus och barrskog; ljuset är för gyllene just nu</li>
+          <li>En lång genomspelning av demot i spelarhöjd</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Grafiken kommer från licensierade paket av sina upphovspersoner på Fab och Unreal Marketplace, bland dem WW2 City, Parisian Street, Ravenhold, Dubrovnik, Bridge Environment, kyrkogårds- och dekalpaket och Megascans, samt från Epic Games exempelprojekt Electric Dreams och Content Examples. Pipelinen, nivålayouterna och gameplaykoden är projektets egna.</p>
+    <p>Bilderna är tagna i Unreal Engine 5.8: regionbilderna i editorn och bilderna från anläggningen i spel.</p>
+  </footer>
+</div>
+
+<script src="fx.js"></script>
+<script>
+(function () {
+  // --- topographic lines behind the title (a fixed noise field, drawn once) ---
+  const cv = document.getElementById("topo");
+  function topo() {
+    if (window.PortfolioFX) { PortfolioFX.terrain(cv); return; } // live 3D terrain (fx.js); the 2D contours below are the fallback
+    const r = cv.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    const g = cv.getContext("2d"); g.clearRect(0, 0, cv.width, cv.height);
+    const col = getComputedStyle(document.documentElement).getPropertyValue("--rule").trim() || "#c9d2cf";
+    const W = 120, H = Math.max(40, Math.round(120 * cv.height / cv.width)); const f = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const u = x / W * 6, v = y / H * 6 * H / W;
+      f[y * W + x] = Math.sin(u * 1.1 + Math.cos(v * .9)) + .6 * Math.cos(v * 1.7 - u * .5) + .35 * Math.sin((u + v) * 2.3) + u * .18;
+    }
+    g.strokeStyle = col; g.lineWidth = 1 * dpr; const sx = cv.width / (W - 1), sy = cv.height / (H - 1);
+    for (let lv = -2; lv <= 3; lv += .22) {
+      g.beginPath();
+      for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) {
+        const a = f[y * W + x], b = f[y * W + x + 1], c = f[(y + 1) * W + x + 1], d = f[(y + 1) * W + x];
+        const pts = []; const e = (p, q, x0, y0, x1, y1) => { if ((p < lv) !== (q < lv)) { const t = (lv - p) / (q - p); pts.push([(x0 + (x1 - x0) * t) * sx, (y0 + (y1 - y0) * t) * sy]); } };
+        e(a, b, x, y, x + 1, y); e(b, c, x + 1, y, x + 1, y + 1); e(c, d, x + 1, y + 1, x, y + 1); e(d, a, x, y + 1, x, y);
+        if (pts.length >= 2) { g.moveTo(pts[0][0], pts[0][1]); g.lineTo(pts[1][0], pts[1][1]); }
+      }
+      g.stroke();
+    }
+  }
+
+  // --- navmesh flood-fill grids (probe_nav.py output, 50 m cells, north at the top) ---
+  const before = [
+"##################................................","###################...............................","####################..............................","#####################.............................","######################............................","#######################...........................","########################..........................","#########################.........................","##########################........................","###########################.......................","############################......................","#############################.....................","##############################....................","###############################...................","################################..................","############################.####.................","######################.########.##................","###################################...............","###############################..###..............","#################################.................","##########################..#.#####..#............","##########################..#.######.#............","##########################..#.##########..........","#############.###############..##..######.........","#############..##############..#.....#####........","##############..##########.###........#####.......","###############..#................................","###########.......................................","##########........................................","###############...................................","#########################...................##....","############################.##.###...###########.","###############################..#####.###########","##########################.##.######.#############","##################################################","##################################################","##################################################","##################################################","##################################################","#############################.####################","##################################################","##################################################","##################################################","##################################################","##################################################","########################.#########################","##################################################","##################################################","##################################################","##################################################"];
+  const after = [
+"##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##########################.#######################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","##################################################","############################.#####################","######################.########.##################","##################################################","###############################..#################","#################################...##############","##########################..#.#####..#############","##########################..#.######.#############","##########################..#.####################","#############################..##..###############","#############################..#.....#############","##########################.###....#...############","##########################.#######################","##################################################","##################################################","##################################################","##################################################","############################.##.###...############","###############################..#####.###########","##########################.##.######.#############","##################################################","##################################################","##################################################","##################################################","##################################################","#############################.####################","##################################################","##################################################","##################################################","##################################################","##################################################","########################.#########################","##################################################","##################################################","##################################################","##################################################"];
+  // the start, Torget at x 2769, y 4324 m: column (2769-1225)/50, row from the north (5425-4324)/50
+  const START = [31, 22];
+  function grid(id, rows) {
+    const c = document.getElementById(id); const g = c.getContext("2d"); const css = getComputedStyle(document.documentElement);
+    const ok = css.getPropertyValue("--ok").trim(), cut = css.getPropertyValue("--cut").trim(), ink = css.getPropertyValue("--ink").trim(), bg = css.getPropertyValue("--sheet").trim();
+    const n = rows.length, s = c.width / n; g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
+    rows.forEach((row, j) => [...row].forEach((ch, i) => {
+      if (ch === " ") return; g.fillStyle = ch === "#" ? ok : cut; g.globalAlpha = ch === "#" ? .55 : .9; g.fillRect(i * s + .5, j * s + .5, s - 1, s - 1);
+    }));
+    g.globalAlpha = 1; g.fillStyle = ink; g.beginPath(); g.arc((START[0] + .5) * s, (START[1] + .5) * s, s * .9, 0, Math.PI * 2); g.fill();
+  }
+  function draw() { topo(); grid("gridBefore", before); grid("gridAfter", after); }
+  draw();
+  if (window.PortfolioFX) {
+    PortfolioFX.reveal(document, "section > header, section > .twocol > div, .steps li, .plates figure, .figures > div, .wide > figure, .pair figure, .trio figure, .tbl, .rooms > div, .grids figure");
+  }
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(topo, 150); });
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw); } catch (e) {}
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // --- lightbox ---
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest("figure img"); if (!img) return;
+    const cap = img.parentElement.querySelector("figcaption");
+    const lb = document.createElement("div"); lb.className = "lb"; lb.setAttribute("role", "dialog"); lb.setAttribute("aria-label", img.alt);
+    lb.innerHTML = '<button type="button">Stäng</button><figure><img alt=""><p></p></figure>';
+    lb.querySelector("img").src = img.src; lb.querySelector("img").alt = img.alt; lb.querySelector("p").textContent = cap ? cap.textContent : "";
+    const close = () => { lb.remove(); document.removeEventListener("keydown", key); img.focus && img.focus(); };
+    const key = (k) => { if (k.key === "Escape") close(); };
+    lb.addEventListener("click", (k) => { if (k.target === lb || k.target.tagName === "BUTTON") close(); });
+    document.addEventListener("keydown", key); document.body.appendChild(lb); lb.querySelector("button").focus();
+  });
+})();
+</script>
+
+</body>
+</html>
