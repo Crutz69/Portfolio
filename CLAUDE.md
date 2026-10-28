@@ -41,7 +41,7 @@ The user's public CV portfolio. The user writes in Swedish; reply in Swedish. Th
 - Swedish text says exactly what the English says, no more.
 - Images: web JPG, at most 1600 px wide, about 50–300 KB. Covers are 16:9.
 - Art in the Unreal shots comes from licensed packs. Keep the credit line in the footers.
-- Others edit this folder too: ChatGPT and the user. Check what changed before building on it.
+- Others edit this folder too: ChatGPT and the user. Check what changed before building on it (`git status`, `git diff`; the folder is a git repo on `main`).
   - JSON must stay valid.
   - `cover.src` must match `img/[a-z0-9_-.]+.(jpg|png|webp)`.
   - Links must be `https://`.
