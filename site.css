@@ -161,8 +161,8 @@ section > header { display: grid; gap: 10px; }
 .card .no { font-family: var(--mono); font-size: .74rem; color: var(--mark); letter-spacing: .1em; }
 .empty { color: var(--ink-soft); padding: 28px; border: 1px dashed var(--rule); }
 
-/* the larger projects get two wide columns; the smaller tests sit below in a quieter, denser group */
-.cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+/* the larger projects share one row; the smaller tests sit below in a quieter, denser group */
+.cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
 .smallgroup { display: grid; gap: 16px; margin-top: 18px; padding-top: 22px; border-top: 1px dashed var(--rule); }
 .smallgroup > header { display: grid; gap: 4px; }
 .smallgroup h3 { font-size: 1.5rem; }
